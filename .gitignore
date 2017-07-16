@@ -1,0 +1,8 @@
+.vscode/
+data/
+venv/
+*.pyc
+build/
+*.swp
+*.egg-info
+activate
