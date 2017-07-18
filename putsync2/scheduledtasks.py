@@ -4,8 +4,8 @@ import logging
 
 import schedule
 
-import putsync2.putioscanner as putioscanner
-from putsync2.model.configuration import getputsyncconfig
+import putioscanner
+from model.configuration import getputsyncconfig
 
 logger = logging.getLogger(__name__)
 

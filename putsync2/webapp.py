@@ -2,7 +2,7 @@ import logging
 
 from flask import Flask, request, jsonify
 
-import putsync2.putioscanner as putioscanner
+import putioscanner
 
 logger = logging.getLogger(__name__)
 app = Flask(__name__)

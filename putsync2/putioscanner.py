@@ -4,9 +4,9 @@ from threading import Lock
 
 import putiopy
 
-from putsync2.model.download import Download
-from putsync2.model.configuration import getputsyncconfig
-import putsync2.model.statestore as statestore
+from model.download import Download
+from model.configuration import getputsyncconfig
+import model.statestore as statestore
 
 logger = logging.getLogger(__name__)
 
@@ -49,7 +49,7 @@ def scan(root_id=0):
 
 def __init():
     global client, current_traversed_path
-    
+
     client = client or putiopy.Client(getputsyncconfig().putio_token)
     current_traversed_path = ['']
 

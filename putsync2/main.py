@@ -1,11 +1,11 @@
 import logging
 import sys
 
-from putsync2.model.configuration import getserverconfig, setconfigfilepath
-from putsync2.downloadthread import createdownloadthreads
+from model.configuration import getserverconfig, setconfigfilepath
+from downloadthread import createdownloadthreads
 
-from putsync2.webapp import app
-from putsync2.scheduledtasks import SchduledTaskThread
+from webapp import app
+from scheduledtasks import SchduledTaskThread
 
 logger = logging.getLogger(__name__)
 loggerformat = '%(asctime)-15s [%(levelname)s] : %(name)s : %(thread)d : %(message)s'

@@ -1,9 +1,9 @@
 import os
 from threading import Lock
 
-from putsync2.model.configuration import getputsyncconfig
-from putsync2.model.exception import PutsyncException, PutsyncExceptionType
-from putsync2.util import mkdir_p
+from model.configuration import getputsyncconfig
+from model.exception import PutsyncException, PutsyncExceptionType
+from util import mkdir_p
 
 
 lock = Lock()

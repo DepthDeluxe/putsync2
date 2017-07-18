@@ -4,9 +4,9 @@ import logging
 
 import putiopy
 
-import putsync2.putioscanner as putioscanner
-from putsync2.model.configuration import getputsyncconfig
-from putsync2.model.download import DownloadStatus
+import putioscanner
+from model.configuration import getputsyncconfig
+from model.download import DownloadStatus
 
 logger = logging.getLogger(__name__)
 

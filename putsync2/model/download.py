@@ -3,10 +3,10 @@ import time
 import logging
 from enum import Enum
 
-import putsync2.putioscanner
-import putsync2.util
-import putsync2.model.statestore
-from putsync2.model.configuration import getputsyncconfig
+import putioscanner
+import util
+import model.statestore
+from model.configuration import getputsyncconfig
 
 logger = logging.getLogger(__name__)
 
@@ -51,7 +51,7 @@ class Download(object):
         logger.info(f'Starting download of {self.remote_file.name}')
 
         full_local_media_path = os.path.join(config.media_path, self.path)
-        putsync2.util.mkdir_p(full_local_media_path)
+        util.mkdir_p(full_local_media_path)
 
         if config.disable_downloading:
             logger.warn(f'Not actually downloading {self.remote_file.name}, configured to disable real downloading')
@@ -62,6 +62,6 @@ class Download(object):
         self.__commit_done()
 
     def __commit_done(self):
-        putsync2.model.statestore.commit(self)
+        model.statestore.commit(self)
 
         logger.info(f'{self.remote_file.name} committed')
