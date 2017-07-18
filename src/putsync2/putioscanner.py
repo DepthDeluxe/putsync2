@@ -10,7 +10,7 @@ import putsync2.model.statestore as statestore
 
 logger = logging.getLogger(__name__)
 
-
+client = None
 current_item = None
 current_traversed_path = None
 queue = []
@@ -32,10 +32,12 @@ def scan(root_id=0):
     # initialize the scanner before using it
     __init()
 
+    logger.info('Waiting for scan lock')
     scan_lock.acquire()
+    logger.info('Scan lock acquired')
     try:
         root_item = client.File.get(root_id)
-        current_traversed_path += __get_full_path()
+        current_traversed_path += __get_full_path(root_item)
 
         if __is_folder(root_item):
             __process_folder_or_print_error(root_item)
@@ -43,6 +45,7 @@ def scan(root_id=0):
             __process_file_or_print_error(root_item)
     finally:
         scan_lock.release()
+        logger.info('Scan lock released')
 
 def __init():
     global client, current_traversed_path
@@ -50,10 +53,10 @@ def __init():
     client = client or putiopy.Client(getputsyncconfig().putio_token)
     current_traversed_path = ['']
 
-def __get_full_path():
+def __get_full_path(remote_item):
     global current_item, client
 
-    current_item = self.root_item
+    current_item = remote_item
     out = []
 
     # return early if the root item is actually the root folder
