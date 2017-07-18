@@ -2,10 +2,8 @@
 install_path=/opt/putsync2
 log_path=/var/log/putsync2
 
-set -e
-
 start_putsync2() {
-    ${install_path}/start.sh
+    ${install_path}/putsync2.pex ${intall_path}/prod.ini
 }
 stop_putsync2() {
     pid=$(get_putsync2_pid)

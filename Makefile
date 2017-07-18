@@ -21,6 +21,7 @@ $(REQUIREMENTS_FILE): dependencies
 	@virtualenv --python=$(PYTHON) $(VENV_PATH)
 	@/bin/bash -c "source $(VENV_PATH)/bin/activate && pip install -r dependencies && pip freeze >$(REQUIREMENTS_FILE)"
 	@ln -sf $(VENV_PATH)/bin/activate activate
+	@ln -sf ../../../../../src/putsync2 $(VENV_PATH)/lib/python3.6/site-packages/putsync2
 
 $(PACKAGE_FILE): $(SOURCES)
 	@echo "=========== Packaging project"
@@ -40,5 +41,5 @@ all: $(PEX_FILE)
 
 clean:
 	rm -rf $(BUILD_PATH) activate
-	find $(SOURCE_PATH) -type d -name '__pycache__' -exec rm -rf '{}' \;
-	find $(SOURCE_PATH) -type f -name '*.pyc' -delete
+	find $(SOURCE_PATH) -type d -name '__pycache__' -exec rm -rf '{}' \; || true
+	find $(SOURCE_PATH) -type f -name '*.pyc' -delete || true

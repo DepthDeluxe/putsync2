@@ -1,11 +1,11 @@
-from threading import Thread
 import os
 import time
 import logging
 from enum import Enum
 
-import putsync2.model.util as util
-import putsync2.model.statestore as statestore
+import putsync2.putioscanner
+import putsync2.util
+import putsync2.model.statestore
 from putsync2.model.configuration import getputsyncconfig
 
 logger = logging.getLogger(__name__)
@@ -65,43 +65,3 @@ class Download(object):
         statestore.commit(self)
 
         logger.info(f'{self.remote_file.name} committed')
-
-
-class DownloadThread(Thread):
-    def __init__(self, queue, queue_lock, *args, **kwargs):
-        super(DownloadThread, self).__init__(*args, **kwargs)
-        self.setDaemon(True)
-
-        self.queue = queue
-        self.queue_lock = queue_lock
-
-    def run(self):
-        while True:
-            try:
-                self.queue_lock.acquire()
-                try:
-                    next_download = self.__get_next_download_and_mark_in_progress_or_return_none()
-                except Exception as e:
-                    raise e
-                finally:
-                    self.queue_lock.release()
-
-                if next_download:
-                    logger.info('Found something to download')
-                    next_download.run()
-                    next_download.markdone()
-                    self.queue.remove(next_download)
-                else:
-                    logger.info('Nothing found to download, sleeping for 10 seconds')
-                    time.sleep(10)
-            except Exception:
-                logger.exception('Error encountered in download loop')
-
-    def __get_next_download_and_mark_in_progress_or_return_none(self):
-        try:
-            download = [download for download in self.queue if download.status == DownloadStatus.new][0]
-            download.markinprogress()
-
-            return download
-        except IndexError:
-            return None

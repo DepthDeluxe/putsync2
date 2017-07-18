@@ -4,7 +4,7 @@ import logging
 
 import schedule
 
-import putsync2.model.manager as manager
+import putsync2.putioscanner as putioscanner
 from putsync2.model.configuration import getputsyncconfig
 
 logger = logging.getLogger(__name__)
@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 def fullscan():
     logger.info('Performing periodic full scan')
 
-    manager.scan()
+    putioscanner.scan()
 
 
 class SchduledTaskThread(Thread):
