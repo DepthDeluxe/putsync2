@@ -1,12 +1,10 @@
 import os
-import time
 import logging
 from enum import Enum
 
-import putioscanner
-import util
-import model.statestore
-from model.configuration import getputsyncconfig
+from .. import util
+from . import statestore
+from .configuration import getputsyncconfig
 
 logger = logging.getLogger(__name__)
 
@@ -62,6 +60,6 @@ class Download(object):
         self.__commit_done()
 
     def __commit_done(self):
-        model.statestore.commit(self)
+        statestore.commit(self)
 
         logger.info(f'{self.remote_file.name} committed')

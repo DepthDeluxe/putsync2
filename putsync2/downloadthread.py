@@ -1,14 +1,13 @@
 import time
-from threading import Thread, Lock
+from threading import Thread
 import logging
 
-import putiopy
-
-import putioscanner
-from model.configuration import getputsyncconfig
-from model.download import DownloadStatus
+from . import putioscanner
+from .model.configuration import getputsyncconfig
+from .model.download import DownloadStatus
 
 logger = logging.getLogger(__name__)
+
 
 def createdownloadthreads():
     logger.info('Initializing putsync manager')
@@ -35,7 +34,8 @@ class DownloadThread(Thread):
             try:
                 self.queue_lock.acquire()
                 try:
-                    next_download = self.__get_next_download_and_mark_in_progress_or_return_none()
+                    next_download = \
+                        self.__get_next_download_and_mark_in_progress_or_return_none()
                 except Exception as e:
                     raise e
                 finally:
@@ -47,14 +47,19 @@ class DownloadThread(Thread):
                     next_download.markdone()
                     self.queue.remove(next_download)
                 else:
-                    logger.info('Nothing found to download, sleeping for 10 seconds')
+                    logger.info(
+                        'Nothing found to download, sleeping for 10 seconds'
+                        )
                     time.sleep(10)
             except Exception:
                 logger.exception('Error encountered in download loop')
 
     def __get_next_download_and_mark_in_progress_or_return_none(self):
         try:
-            download = [download for download in self.queue if download.status == DownloadStatus.new][0]
+            download = [
+                    download for download in self.queue
+                    if download.status == DownloadStatus.new
+                    ][0]
             download.markinprogress()
 
             return download

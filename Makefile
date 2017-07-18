@@ -3,7 +3,7 @@ VERSION = 0.0.1
 PYTHON := /usr/local/bin/python3.6
 PIP := /usr/local/bin/pip3.6
 BUILD_PATH := ./build
-SOURCE_PATH := ./src
+SOURCE_PATH := ./putsync2
 
 VENV_PATH := $(BUILD_PATH)/venv
 WHEEL_PATH := $(BUILD_PATH)/wheels

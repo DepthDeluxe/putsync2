@@ -1,11 +1,11 @@
 import logging
 import sys
 
-from model.configuration import getserverconfig, setconfigfilepath
-from downloadthread import createdownloadthreads
+from .model.configuration import getserverconfig, setconfigfilepath
+from .downloadthread import createdownloadthreads
 
-from webapp import app
-from scheduledtasks import SchduledTaskThread
+from .webapp import app
+from .scheduledtasks import SchduledTaskThread
 
 logger = logging.getLogger(__name__)
 loggerformat = '%(asctime)-15s [%(levelname)s] : %(name)s : %(thread)d : %(message)s'

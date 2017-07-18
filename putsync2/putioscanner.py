@@ -4,9 +4,9 @@ from threading import Lock
 
 import putiopy
 
-from model.download import Download
-from model.configuration import getputsyncconfig
-import model.statestore as statestore
+from .model.download import Download
+from .model.configuration import getputsyncconfig
+from .model import statestore
 
 logger = logging.getLogger(__name__)
 
@@ -22,13 +22,14 @@ scan_lock = Lock()
 # no arguments
 current_traversed_path = None
 
+
 def getqueueandlock():
     return queue, queue_lock
 
 
 def scan(root_id=0):
     global root_item, current_traversed_path, scan_lock, client
-    
+
     # initialize the scanner before using it
     __init()
 
@@ -47,11 +48,13 @@ def scan(root_id=0):
         scan_lock.release()
         logger.info('Scan lock released')
 
+
 def __init():
     global client, current_traversed_path
 
     client = client or putiopy.Client(getputsyncconfig().putio_token)
     current_traversed_path = ['']
+
 
 def __get_full_path(remote_item):
     global current_item, client
@@ -72,14 +75,17 @@ def __get_full_path(remote_item):
 
     return out
 
+
 def __is_folder(remote_item):
     return remote_item.file_type == 'FOLDER'
+
 
 def __process_folder_or_print_error(remote_folder):
     try:
         __process_folder(remote_folder)
     except Exception as e:
         logger.exception('Error scanning folder {remote_folder.name}')
+
 
 def __process_folder(remote_folder):
     global current_traversed_path
@@ -100,11 +106,13 @@ def __process_folder(remote_folder):
 
     current_traversed_path.pop()
 
+
 def __process_file_or_print_error(remote_file):
     try:
         __process_file(remote_file)
     except Exception as e:
         logger.exception(f'Error scanning file {remote_file.name}')
+
 
 def __process_file(remote_file):
     global current_traversed_path, queue_lock, queue

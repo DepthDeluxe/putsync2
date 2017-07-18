@@ -1,0 +1,37 @@
+#!/bin/bash
+install_path=/opt/putsync2
+log_path=/var/log/putsync2
+pidfile_path=${log_path}/putsync2.pid
+user=putsync
+
+start_putsync2() {
+    start-stop-daemon --start --quiet --oknodo --background --pidfile "$pidfile_path" --exec "${install_path}/putsync2.pex" -- "${intall_path}/prod.ini"
+}
+stop_putsync2() {
+    start-stop-daemon --stop --quiet --oknodo --pidfile "$pidfile_path"
+}
+restart_putsync2() {
+    stop_putsync2
+    start_putsync2
+}
+status_putsync2() {
+    start-stop-daemon --status --pidfile "$pidfile_path"
+    if [ $? ]; then
+        echo "Putsync2 is running... pid ${pid}"
+        exit 0
+    else
+        echo "Putsync2 is not running"
+        exit 1
+    fi
+}
+
+case $1 in
+    start)
+        ;;
+    stop)
+        ;;
+    restart)
+        ;;
+    status)
+        ;;
+esac

@@ -1,12 +1,13 @@
 import os
 from threading import Lock
 
-from model.configuration import getputsyncconfig
-from model.exception import PutsyncException, PutsyncExceptionType
-from util import mkdir_p
+from .configuration import getputsyncconfig
+from .exception import PutsyncException, PutsyncExceptionType
+from ..util import mkdir_p
 
 
 lock = Lock()
+
 
 def commit(download):
     global lock
