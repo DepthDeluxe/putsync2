@@ -5,10 +5,10 @@ pidfile_path=${log_path}/putsync2.pid
 user=putsync
 
 start_putsync2() {
-    start-stop-daemon --start --quiet --oknodo --background --pidfile "$pidfile_path" --exec "${install_path}/putsync2.pex" -- "${intall_path}/prod.ini"
+    start-stop-daemon --start --quiet --oknodo --background --name putsync2 --chuid "$user" --group "$user" --pidfile "$pidfile_path" --exec /bin/bash -- -c "exec '${install_path}/putsync2.pex' '${install_path}/prod.ini' &>/var/log/putsync2.log"
 }
 stop_putsync2() {
-    start-stop-daemon --stop --quiet --oknodo --pidfile "$pidfile_path"
+    start-stop-daemon --stop --quiet --oknodo --name putsync2 --pidfile "$pidfile_path"
 }
 restart_putsync2() {
     stop_putsync2
@@ -27,11 +27,15 @@ status_putsync2() {
 
 case $1 in
     start)
+        start_putsync2
         ;;
     stop)
+        stop_putsync2
         ;;
     restart)
+        restart_putsync2
         ;;
     status)
+        status_putsync2
         ;;
 esac
