@@ -42,6 +42,7 @@ class DownloadThread(Thread):
     def loop(self):
         download = self.__getnextdownload()
         if download is not None:
+            logger.info(f'Now processing {download.filepath}')
             downloadprocessor.processdownload(download)
             return True
         else:

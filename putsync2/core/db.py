@@ -1,13 +1,16 @@
 from enum import Enum
 import logging
+import os
 
 from pony import orm
 from pony.orm.dbapiprovider import StrConverter
 
+from .configuration import getputsyncconfig
 
 logger = logging.getLogger(__name__)
 
-db = orm.Database(provider='sqlite', filename='./putsync.sqlite3', create_db=True)
+# set to none on initialization as it relies on config which is initialized in main()
+db = orm.Database()
 
 class EnumConverter(StrConverter):
     def validate(self, val):
@@ -28,10 +31,16 @@ class EnumConverter(StrConverter):
         return self.py_type[val]
 
 
-# add the provider to database
-db.provider.converter_classes.append((Enum, EnumConverter))
-
 def init():
     logger.info('Initializing database, creating tables as necessary')
 
+    # properly format the relative pathing for db file.  If this isn't done,
+    # pony will choose the location of script file as the current directory
+    # for some unknown reason
+    database_path = getputsyncconfig().database_path
+    if database_path[0] != '/':
+        database_path = os.getcwd() + '/' + database_path
+
+    db.bind(provider='sqlite', filename=database_path, create_db=True)
+    db.provider.converter_classes.append((Enum, EnumConverter))
     db.generate_mapping(create_tables=True)

@@ -15,7 +15,7 @@ def locked(func):
        
         lockmap[funcname].acquire()
         try:
-            func(*args, **kwargs)
+            return func(*args, **kwargs)
         finally:
             lockmap[funcname].release()
 

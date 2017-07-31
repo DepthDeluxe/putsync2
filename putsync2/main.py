@@ -24,8 +24,8 @@ def main():
     config = getserverconfig()
 
     db.init() 
-    # createdownloadthreads()
-    # SchduledTaskThread().start()
+    createdownloadthreads()
+    SchduledTaskThread().start()
 
     logger.info('Loaded configuration')
     logger.info('Server host %s port %s', config.host, config.port)

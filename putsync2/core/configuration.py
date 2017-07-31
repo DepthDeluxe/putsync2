@@ -10,7 +10,7 @@ class ServerConfig(object):
 class PutsyncConfig(object):
     def __init__(self, config):
         self.putio_token = config.get('putsync', 'putio_token')
-        self.metadata_path = config.get('putsync', 'metadata_path')
+        self.database_path = config.get('putsync', 'database_path')
         self.media_path = config.get('putsync', 'media_path')
         self.download_threads = config.getint('putsync', 'download_threads')
         self.full_scan_interval_minutes = config.getint('putsync', 'full_scan_interval_minutes')

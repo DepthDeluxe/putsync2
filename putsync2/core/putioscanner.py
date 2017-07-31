@@ -100,7 +100,10 @@ def __process_file(remote_file):
     logger.info('Processing file %s', remote_file.name)
 
     # check for existing downloads
-    if not __download_exists(remote_file):
+    if __download_exists(remote_file):
+        logger.info('File previously scanned')
+    else:
+        logger.info('This is a new file, adding to system...')
         new_downloads.append(
             Download(
                 remote_file_id=remote_file.id,

@@ -1,7 +1,9 @@
 import logging
 import threading
+import os
 
 from pony import orm
+import putiopy
 
 from ..core.configuration import getputsyncconfig
 from ..core.models.download import DownloadStatus
@@ -22,8 +24,12 @@ def processdownload(download):
 
     logger.info(f'Starting download of {remote_file.name}')
 
-    full_local_media_path = os.path.dirname(os.path.join(config.media_path, self.filepath))
-    os.makedirs(full_local_media_path)
+    full_local_media_path = os.path.dirname(os.path.join(config.media_path, download.filepath))
+    try:
+        os.makedirs(full_local_media_path)
+    except FileExistsError:
+        logger.info(f'Folder {full_local_media_path} already exists')
+        pass
 
     if config.disable_downloading:
         logger.warn(f'Not actually downloading {remote_file.name}, configured to disable real downloading')
@@ -44,7 +50,7 @@ def __checkdownloadvalidandmarkinprogress(download):
         return True
 
 
-def __disable_file_verification(self, remote_file):
+def __disable_file_verification(remote_file):
     def __new_verify_file(*args, **kwargs):
         return True
 
