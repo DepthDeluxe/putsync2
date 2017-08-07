@@ -17,7 +17,7 @@ def createdownloadthreads():
     config = getputsyncconfig()
 
     # create the threads and start them
-    logger.info(f'Will spawn {config.download_threads} threads')
+    logger.info(f'Will spawn {config.download_threads} downloader threads')
     threads = []
     for i in range(0, config.download_threads):
         threads.append(DownloadThread())

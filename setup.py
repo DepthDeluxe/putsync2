@@ -115,7 +115,7 @@ setup(
     # pip to create the appropriate form of executable for the target platform.
     entry_points={
         'console_scripts': [
-            'putsync2=putsync2.main:main',
+            # 'putsync2=putsync2.main:main',
         ],
     },
 )

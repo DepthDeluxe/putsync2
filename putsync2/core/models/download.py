@@ -11,16 +11,16 @@ logger = logging.getLogger(__name__)
 
 
 class DownloadStatus(Enum):
-    new = 'NEW'
-    in_progress = 'IN_PROGRESS'
-    done = 'DONE'
-    failed = 'FAILED'
+    new = 'new'
+    in_progress = 'in_progress'
+    done = 'done'
+    failed = 'failed'
 
 
 class Download(db.Entity):
-    remote_file_id = orm.PrimaryKey(int)
+    remote_file_id = orm.PrimaryKey(int, size=64)
     filepath = orm.Required(str)
-    size = orm.Required(int)
+    size = orm.Required(int, size=64)
     status = orm.Required(str, default=DownloadStatus.new.value)
     started_at = orm.Optional(datetime.datetime)
     done_at = orm.Optional(datetime.datetime)

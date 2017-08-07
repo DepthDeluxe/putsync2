@@ -107,7 +107,7 @@ def __process_file(remote_file):
         new_downloads.append(
             Download(
                 remote_file_id=remote_file.id,
-                filepath=os.path.join(*current_traversed_path) + '/' + remote_file.name,
+                filepath=os.path.join(*current_traversed_path, remote_file.name),
                 size=remote_file.size
             )
         )

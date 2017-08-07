@@ -20,6 +20,7 @@ class SchduledTaskThread(Thread):
     def __init__(self, *args, **kwargs):
         super(SchduledTaskThread, self).__init__(*args, **kwargs)
         self.setDaemon(True)
+        logger.info('Starting up scheduled task thread')
 
         config = getputsyncconfig()
 
