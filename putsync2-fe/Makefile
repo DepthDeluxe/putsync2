@@ -1,9 +1,14 @@
-.PHONY: dist build
-install:
+.PHONY: install build
+
+all: .PHONY
+
+install: package.json
+	@echo "====== Installing NPM Dependencies"
 	@npm install
 
-dev: install
-	@npm run dev
-
 build:
+	@echo "====== Building putsync2-fe"
 	@npm run build
+
+clean:
+	@rm -rf build/dist node_modules

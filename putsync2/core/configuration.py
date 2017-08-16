@@ -5,6 +5,7 @@ class ServerConfig(object):
     def __init__(self, config):
         self.host = config.get('server', 'host')
         self.port = config.getint('server', 'port')
+        self.dist_path = config.get('server', 'dist_path')
 
 
 class PutsyncConfig(object):

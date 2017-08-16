@@ -6,6 +6,7 @@ PYTHON := /export/apps/python/3.6/bin/python3.6
 PIP := /export/apps/python/3.6/bin/pip3.6
 BUILD_PATH := ./build
 SOURCE_PATH := ./putsync2
+MAKE := make
 
 VENV_PATH := $(BUILD_PATH)/venv
 WHEEL_PATH := $(BUILD_PATH)/wheels
@@ -17,6 +18,8 @@ PEX_FILE := $(BUILD_PATH)/putsync2.pex
 
 .PHONY: all
 	echo "None"
+
+all: $(PEX_FILE) frontend
 
 $(REQUIREMENTS_FILE): dependencies
 	@echo "=========== Building virtualenvironment and requirements.txt"
@@ -37,8 +40,8 @@ $(PEX_FILE): $(WHEELS_FILE) $(PACKAGE_FILE)
 	@echo "=========== Building packaged PEX"
 	@pex --no-index --disable-cache --python=$(PYTHON) -f $(BUILD_PATH)/wheels -o $(BUILD_PATH)/putsync2.pex --entry-point='putsync2.main:main' -r $(REQUIREMENTS_FILE) putsync2
 
-
-all: $(PEX_FILE)
+frontend:
+	cd putsync2-fe && $(MAKE)
 
 clean:
 	rm -rf $(BUILD_PATH) activate

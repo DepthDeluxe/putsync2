@@ -3,6 +3,7 @@ import logging
 from flask import Flask, request, jsonify, send_from_directory
 
 from .api import api
+from .core.configuration import getserverconfig
 
 logger = logging.getLogger(__name__)
 app = Flask(__name__, static_url_path='')
@@ -25,7 +26,7 @@ Disallow: *'''
 
 
 @app.route('/assets/<path:path>')
-def xxx(path):
-    return send_from_directory('../build/dist', path)
+def assets(path):
+    return send_from_directory(getserverconfig().dist_path, path)
 
 app.register_blueprint(api)
