@@ -16,7 +16,7 @@ app = Flask(__name__, static_url_path='')
 @app.route('/')
 def index():
     logger.error('XXXXXXX')
-    return send_from_directory('../build/dist', 'index.html')
+    return send_from_directory(getserverconfig().dist_path, 'index.html')
 
 
 @app.route('/robots.txt')

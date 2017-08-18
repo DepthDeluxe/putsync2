@@ -1,12 +1,11 @@
 VERSION = 0.0.1
 
-// PYTHON := /usr/local/bin/python3.6
-PYTHON := /export/apps/python/3.6/bin/python3.6
-// PIP := /usr/local/bin/pip3.6
-PIP := /export/apps/python/3.6/bin/pip3.6
+PYTHON ?= /usr/local/bin/python3.6
+PIP ?= /usr/local/bin/pip3.6
+MAKE ?= make
+
 BUILD_PATH := ./build
 SOURCE_PATH := ./putsync2
-MAKE := make
 
 VENV_PATH := $(BUILD_PATH)/venv
 WHEEL_PATH := $(BUILD_PATH)/wheels
