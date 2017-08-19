@@ -1,6 +1,7 @@
 import logging
+import re
 
-from flask import Flask, request, jsonify, send_from_directory
+from flask import Flask, request, jsonify, send_from_directory, abort
 
 from .api import api
 from .core.configuration import getserverconfig
@@ -12,10 +13,16 @@ app = Flask(__name__, static_url_path='')
 #     DEBUG=True,
 # )
 
+def validatewhitelist():
+    logger.info(f'Incoming address {request.remote_addr}')
+    incoming_quartet = request.remote_addr.split('.')
+    if not re.match('192\.168\.|127\.0\.0\.1', request.remote_addr):
+        abort(403)
+
 
 @app.route('/')
 def index():
-    logger.error('XXXXXXX')
+    validatewhitelist()
     return send_from_directory(getserverconfig().dist_path, 'index.html')
 
 
@@ -27,6 +34,7 @@ Disallow: *'''
 
 @app.route('/assets/<path:path>')
 def assets(path):
+    validatewhitelist()
     return send_from_directory(getserverconfig().dist_path, path)
 
 app.register_blueprint(api)
