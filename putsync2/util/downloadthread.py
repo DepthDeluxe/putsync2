@@ -2,7 +2,6 @@ import time
 from threading import Thread
 import logging
 
-from pony import orm
 
 from ..core.configuration import getputsyncconfig
 from ..core import downloadprocessor
@@ -38,16 +37,10 @@ class DownloadThread(Thread):
             logger.info('No downloads found, sleeping for 10 seconds')
             time.sleep(10)
 
-    @orm.db_session
     def loop(self):
-        download = self.__getnextdownload()
-        if download is not None:
-            logger.info(f'Now processing {download.filepath}')
-            downloadprocessor.processdownload(download)
+        id = downloadprocessor.getnextdownloadid()
+        if id is not None:
+            downloadprocessor.processdownload(id)
             return True
         else:
             return False
-
-
-    def __getnextdownload(self):
-        return orm.select(d for d in Download if d.status == DownloadStatus.new.value).first()

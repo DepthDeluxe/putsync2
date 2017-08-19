@@ -3,10 +3,10 @@
         <el-table
             :data="table_data"
             style="width: 100%"
-            height=150
+            height=500
             stripe
             border>
-            <el-table-column prop="name" label="Name"></el-table-column>
+            <el-table-column prop="filepath" label="Name"></el-table-column>
             <el-table-column prop="started_at" label="Started At"></el-table-column>
             <el-table-column prop="running_for" label="Running For"></el-table-column>
         </el-table>

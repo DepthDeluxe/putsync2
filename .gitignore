@@ -2,11 +2,14 @@
 data/
 venv/
 *.pyc
-build/
 *.swp
 *.egg-info
 activate
 config
 
+putsync2-fe/build
+putsync2-fe/package-lock.json
+build/
 node_modules/
 dist/
+var/

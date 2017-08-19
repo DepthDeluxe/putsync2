@@ -25,7 +25,7 @@
 export default {
     data() {
         return {
-            download_page: 0,
+            download_page: 1,
             download_page_size: 8,
             download_count: 0,
             table_data: []
@@ -42,7 +42,7 @@ export default {
         },
         gettabledata() {
             var query_string = 'status=done'
-            query_string += '&page=' + this.download_page
+            query_string += '&page=' + (this.download_page-1)
             query_string += '&page-size=' + this.download_page_size
 
             // get the historical downloads
