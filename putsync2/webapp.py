@@ -16,7 +16,7 @@ app = Flask(__name__, static_url_path='')
 def validatewhitelist():
     logger.info(f'Incoming address {request.remote_addr}')
     incoming_quartet = request.remote_addr.split('.')
-    if not re.match('192\.168\.|127\.0\.0\.1', request.remote_addr):
+    if not re.match('192\.168\.|127\.0\.0\.1', request.remote_addr) or re.match('192\.168\.20', request.remote_addr):
         abort(403)
 
 
