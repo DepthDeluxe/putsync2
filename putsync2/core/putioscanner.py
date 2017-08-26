@@ -50,7 +50,7 @@ def __get_full_path(remote_item):
     # so it is not included in the name convention
     remote_item = client.File.get(remote_item.parent_id)
     while remote_item.id != 0:
-        out.insert(0, remote_item)
+        out.insert(0, remote_item.name)
         remote_item = client.File.get(remote_item.parent_id)
 
     return out
