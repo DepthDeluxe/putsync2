@@ -2,6 +2,7 @@ import logging
 import sys
 
 from .core.configuration import getserverconfig, setconfigfilepath
+from .util.purger import purgeinprogressdownloads
 from .util.downloadthread import createdownloadthreads
 from .util.scheduledtasks import SchduledTaskThread
 from .webapp import app
@@ -24,6 +25,8 @@ def main():
     config = getserverconfig()
 
     db.init() 
+    purgeinprogressdownloads()  # we want to purge anything in-progress on start because it won't properly resume on start again
+
     createdownloadthreads()
     SchduledTaskThread().start()
 
