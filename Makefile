@@ -1,7 +1,7 @@
 VERSION = 0.0.1
 
-PYTHON ?= /usr/local/bin/python3.6
-PIP ?= /usr/local/bin/pip3.6
+PYTHON ?= python3.6
+PIP ?= pip3.6
 MAKE ?= make
 
 BUILD_PATH := ./build
@@ -22,27 +22,29 @@ all: $(PEX_FILE) frontend
 
 $(REQUIREMENTS_FILE): dependencies
 	@echo "=========== Building virtualenvironment and requirements.txt"
-	@virtualenv --python=$(PYTHON) $(VENV_PATH)
+	@$(PYTHON) -m venv $(VENV_PATH)
 	@/bin/bash -c "source $(VENV_PATH)/bin/activate && pip install -r dependencies && pip freeze >$(REQUIREMENTS_FILE)"
 	@ln -sf $(VENV_PATH)/bin/activate activate
 
 $(PACKAGE_FILE): $(SOURCES)
 	@echo "=========== Packaging project"
-	@$(PIP) wheel --wheel-dir=$(WHEEL_PATH) .
+	@/bin/bash -c "source $(VENV_PATH)/bin/activate && pip install wheel && pip wheel --wheel-dir=$(WHEEL_PATH) ."
 
 $(WHEELS_FILE): $(REQUIREMENTS_FILE)
 	@echo "=========== Building dependent wheels"
-	@$(PIP) wheel --wheel-dir=$(WHEEL_PATH) -r $(REQUIREMENTS_FILE)
+	@/bin/bash -c "source $(VENV_PATH)/bin/activate && pip install wheel && pip wheel -r $(REQUIREMENTS_FILE) --wheel-dir=$(WHEEL_PATH)"
 	@cp $(REQUIREMENTS_FILE) $(WHEELS_FILE)
 
 $(PEX_FILE): $(WHEELS_FILE) $(PACKAGE_FILE)
 	@echo "=========== Building packaged PEX"
-	@pex --no-index --disable-cache --python=$(PYTHON) -f $(BUILD_PATH)/wheels -o $(BUILD_PATH)/putsync2.pex --entry-point='putsync2.main:main' -r $(REQUIREMENTS_FILE) putsync2
+	@/bin/bash -c "source $(VENV_PATH)/bin/activate && pip install pex && pex --no-index --disable-cache --python=$(PYTHON) -f $(BUILD_PATH)/wheels -o $(BUILD_PATH)/putsync2.pex --entry-point='putsync2.main:main' -r $(REQUIREMENTS_FILE) putsync2"
 
 frontend:
-	cd putsync2-fe && $(MAKE)
+	cd ./putsync2-fe && $(MAKE)
+	ln -s ../putsync2-fe/build/dist ./build/dist
 
 clean:
 	rm -rf $(BUILD_PATH) activate
+	cd ./putsync2-fe && $(MAKE) clean
 	find $(SOURCE_PATH) -type d -name '__pycache__' -exec rm -rf '{}' \; || true
 	find $(SOURCE_PATH) -type f -name '*.pyc' -delete || true
