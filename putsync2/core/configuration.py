@@ -10,6 +10,7 @@ class ServerConfig(object):
 
 class PutsyncConfig(object):
     def __init__(self, config):
+        self.log_level = config.get('putsync', 'log_level')
         self.putio_token = config.get('putsync', 'putio_token')
         self.database_path = config.get('putsync', 'database_path')
         self.media_path = config.get('putsync', 'media_path')

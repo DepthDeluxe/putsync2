@@ -40,6 +40,7 @@ def __init():
 
 
 def __get_full_path(remote_item):
+    logger.debug('Building full path')
     out = []
 
     # return early if the root item is actually the root folder
@@ -50,9 +51,11 @@ def __get_full_path(remote_item):
     # so it is not included in the name convention
     remote_item = client.File.get(remote_item.parent_id)
     while remote_item.id != 0:
+        logger.debug(f'Current path list: {out}')
         out.insert(0, remote_item.name)
         remote_item = client.File.get(remote_item.parent_id)
 
+    logger.debug(f'Final full path: {out}')
     return out
 
 
@@ -104,6 +107,7 @@ def __process_file(remote_file):
         logger.info('File previously scanned')
     else:
         logger.info('This is a new file, adding to system...')
+        logger.debug(f'Current traversed path: {current_traversed_path}')
         new_downloads.append(
             Download(
                 remote_file_id=remote_file.id,
