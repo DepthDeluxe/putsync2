@@ -7,6 +7,7 @@ https://github.com/pypa/sampleproject
 
 # Always prefer setuptools over distutils
 from setuptools import setup, find_packages
+
 # To use a consistent encoding
 from codecs import open
 from os import path
@@ -55,12 +56,7 @@ setup(
 
         # Specify the Python versions you support here. In particular, ensure
         # that you indicate whether you support Python 2, Python 3 or both.
-        'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.3',
-        'Programming Language :: Python :: 3.4',
-        'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
     ],
 
     # What does your project relate to?
@@ -72,7 +68,7 @@ setup(
     packages=find_packages(exclude=['data', 'config', 'build', 'contrib']),
     include_package_data=True,
     platforms='any',
-    
+
     # Alternatively, if you want to distribute just a my_module.py, uncomment
     # this:
     #   py_modules=["my_module"],
@@ -83,8 +79,11 @@ setup(
     # https://packaging.python.org/en/latest/requirements.html
     # install_requires=['peppercorn'],
     install_requires=[
-            ],
-            
+        'pony',
+        'putio.py',
+        'Flask',
+        'schedule'
+    ],
 
     python_requires='>=3.6',
 
@@ -115,7 +114,7 @@ setup(
     # pip to create the appropriate form of executable for the target platform.
     entry_points={
         'console_scripts': [
-            # 'putsync2=putsync2.main:main',
+            'putsync2=putsync2.main:main',
         ],
     },
 )
