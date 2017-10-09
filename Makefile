@@ -25,6 +25,7 @@ pex: $(PEX_FILE)
 $(REQUIREMENTS_FILE): setup.py
 	$(PYTHON) -m venv $(VENV_PATH)
 	/bin/bash -c "source $(VENV_PATH)/bin/activate && pip install pex wheel && python setup.py develop && pip freeze -l | grep -v putsync > $(REQUIREMENTS_FILE) && pip wheel -r $(REQUIREMENTS_FILE) -w $(WHEEL_PATH)"
+	ln -sf $(VENV_PATH)/bin/activate
 
 
 $(PACKAGE_FILE): $(SOURCES)

@@ -61,9 +61,13 @@ def downloads():
 @orm.db_session
 def getdownloadsfilterbystatus(status, page, page_size):
     data = orm.select(d for d in Download if d.status == status)\
-            .order_by(orm.desc(Download.done_at))\
-            [page*page_size:(page+1)*page_size]
-    count = orm.select(orm.count(d) for d in Download if d.status == status).first()
+            .order_by(
+                orm.desc(Download.done_at))[
+                    page*page_size:(page+1)*page_size
+                ]
+    count = orm.select(
+        orm.count(d) for d in Download if d.status == status
+    ).first()
 
     return data, count
 
@@ -71,7 +75,7 @@ def getdownloadsfilterbystatus(status, page, page_size):
 @api.route('/add', methods=['POST'])
 def add():
     magnet_link = flask.request.json['magnet_link']
-    
+
     client = putiopy.Client(getputsyncconfig().putio_token)
     client.Transfer.add_url(magnet_link)
 
@@ -91,34 +95,78 @@ def statistics():
 
     return flask.jsonify({
         'data': {
-            'bytes': { 'total': total_bytes, '1day': last_day_bytes, '30days': last_month_bytes },
-            'count': { 'total': total_count, '1day': last_day_count, '30days': last_month_count },
+            'bytes': {
+                'total': total_bytes,
+                '1day': last_day_bytes,
+                '30days': last_month_bytes
+            },
+            'count': {
+                'total': total_count,
+                '1day': last_day_count,
+                '30days': last_month_count
+            },
             'last_time': last_download_time,
-            'rate': { '1day': rate }
+            'rate': {'1day': rate}
             }
         })
 
+
 @orm.db_session
 def getbytesdownloaded():
-    total_bytes = orm.sum(d.size for d in Download if d.status == DownloadStatus.done.value)
-    last_day_bytes = orm.sum(d.size for d in Download if d.status == DownloadStatus.done.value and d.started_at > (datetime.datetime.now() - datetime.timedelta(days=1)))
-    last_month_bytes = orm.sum(d.size for d in Download if d.status == DownloadStatus.done.value and d.started_at > (datetime.datetime.now() - datetime.timedelta(days=30)))
+    total_bytes = orm.sum(
+        d.size for d in Download if d.status == DownloadStatus.done.value
+    )
+    last_day_bytes = orm.sum(
+        d.size for d in Download
+        if d.status == DownloadStatus.done.value
+        and d.started_at > (
+            datetime.datetime.now() - datetime.timedelta(days=1)
+        )
+    )
+    last_month_bytes = orm.sum(
+        d.size for d in Download
+        if d.status == DownloadStatus.done.value
+        and d.started_at > (
+            datetime.datetime.now() - datetime.timedelta(days=30)
+        )
+    )
 
     return total_bytes, last_day_bytes, last_month_bytes
 
+
 @orm.db_session
 def getdownloadcount():
-    total_count = orm.count(d.size for d in Download if d.status == DownloadStatus.done.value)
-    last_day_count = orm.count(d.size for d in Download if d.status == DownloadStatus.done.value and d.started_at > (datetime.datetime.now() - datetime.timedelta(days=1)))
-    last_month_count = orm.count(d.size for d in Download if d.status == DownloadStatus.done.value and d.started_at > (datetime.datetime.now() - datetime.timedelta(days=30)))
+    total_count = orm.count(
+        d.size for d in Download
+        if d.status == DownloadStatus.done.value
+    )
+    last_day_count = orm.count(
+        d.size for d in Download
+        if d.status == DownloadStatus.done.value
+        and d.started_at > (
+            datetime.datetime.now() - datetime.timedelta(days=1)
+        )
+    )
+    last_month_count = orm.count(
+        d.size for d in Download
+        if d.status == DownloadStatus.done.value
+        and d.started_at > (
+            datetime.datetime.now() - datetime.timedelta(days=30)
+        )
+    )
 
     return total_count, last_day_count, last_month_count
 
+
 @orm.db_session
 def getlastdownloadtime():
-    t = orm.max(d.done_at for d in Download if d.status == DownloadStatus.done.value)
+    t = orm.max(
+        d.done_at for d in Download
+        if d.status == DownloadStatus.done.value
+    )
 
     return t
+
 
 @orm.db_session
 def getaveragedownloadrate():
@@ -128,5 +176,5 @@ FROM
     Download
 WHERE
     status = 'done' ''')
-    
+
     return rate

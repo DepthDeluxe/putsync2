@@ -24,7 +24,10 @@ class SchduledTaskThread(Thread):
 
         config = getputsyncconfig()
 
-        logger.info(f'Scheduling full scan to happen every {config.full_scan_interval_minutes} minutes')
+        logger.info(
+            f'Scheduling full scan to happen every '
+            f'{config.full_scan_interval_minutes} minutes'
+        )
         schedule.every(config.full_scan_interval_minutes).minutes.do(fullscan)
 
     def run(self):

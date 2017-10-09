@@ -3,6 +3,7 @@ import threading
 lockeddecoratorlock = threading.RLock()
 lockmap = {}
 
+
 def locked(func):
     def __safe_func(*args, **kwargs):
         funcname = f'{func.__module__}:{func.__name__}'
@@ -12,7 +13,7 @@ def locked(func):
         if funcname not in lockmap:
             lockmap[funcname] = threading.RLock()
         lockeddecoratorlock.release()
-       
+
         lockmap[funcname].acquire()
         try:
             return func(*args, **kwargs)

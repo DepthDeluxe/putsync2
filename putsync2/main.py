@@ -1,7 +1,8 @@
 import logging
 import sys
 
-from .core.configuration import getputsyncconfig, getserverconfig, setconfigfilepath
+from .core.configuration import getputsyncconfig, getserverconfig,\
+        setconfigfilepath
 from .util.purger import purgeinprogressdownloads
 from .util.downloadthread import createdownloadthreads
 from .util.scheduledtasks import SchduledTaskThread
@@ -10,12 +11,16 @@ from .webapp import app
 from .core import db
 
 logger = logging.getLogger(__name__)
-loggerformat = '%(asctime)-15s [%(levelname)s] : %(name)s : %(thread)d : %(message)s'
+loggerformat =\
+    '%(asctime)-15s [%(levelname)s] : %(name)s : %(thread)d : %(message)s'
 
 
 def main():
     if len(sys.argv) < 2:
-        print('Need to specify configuration file, format is : main.py [file.ini]')
+        print(
+            'Need to specify configuration file, '
+            'format is : main.py [file.ini]'
+        )
         sys.exit(1)
 
     # setup configuration and load it
@@ -23,8 +28,11 @@ def main():
     setuplogging()
     config = getserverconfig()
 
-    db.init() 
-    purgeinprogressdownloads()  # we want to purge anything in-progress on start because it won't properly resume on start again
+    db.init()
+
+    # we want to purge anything in-progress on start because
+    # it won't properly resume on start again
+    purgeinprogressdownloads()
 
     createdownloadthreads()
     SchduledTaskThread().start()
@@ -47,6 +55,7 @@ def setuplogging():
 
     logging.basicConfig(format=loggerformat, level=level)
     logger.warn(f'Log level set to {level}')
+
 
 if __name__ == '__main__':
     main()

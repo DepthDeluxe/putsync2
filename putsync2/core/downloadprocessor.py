@@ -35,7 +35,7 @@ def processdownload(id):
         logger.warn(f'Not actually downloading {remote_file.name}, configured to disable real downloading')
     else:
         remote_file.download(dest=full_local_media_path)
-   
+
     # commit the results
     with db_session:
         Download[id].markdone()
