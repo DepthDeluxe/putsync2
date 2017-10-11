@@ -4,7 +4,7 @@ import sys
 from .core.configuration import getputsyncconfig, getserverconfig,\
         setconfigfilepath
 from .util.purger import purgeinprogressdownloads
-from .util.downloadthread import createdownloadthreads
+from .core.downloadprocessor import createprocessor
 from .util.scheduledtasks import SchduledTaskThread
 from .webapp import app
 
@@ -33,8 +33,7 @@ def main():
     # we want to purge anything in-progress on start because
     # it won't properly resume on start again
     purgeinprogressdownloads()
-
-    createdownloadthreads()
+    createprocessor()
     SchduledTaskThread().start()
 
     logger.info('Loaded configuration')

@@ -1,4 +1,3 @@
-import os
 import logging
 from enum import Enum
 import datetime
@@ -27,12 +26,11 @@ class Download(db.Entity):
 
     def markinprogress(self):
         self.status = DownloadStatus.in_progress.value
-        self.started_at = datetime.datetime.now()
+        self.started_at = datetime.datetime.utcnow()
 
     def markdone(self):
         self.status = DownloadStatus.done.value
-        self.done_at = datetime.datetime.now()
+        self.done_at = datetime.datetime.utcnow()
 
     def markfailed(self):
         self.status = DownloadStatus.failed.value
-

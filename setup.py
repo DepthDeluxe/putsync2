@@ -82,7 +82,8 @@ setup(
         'pony',
         'putio.py',
         'Flask',
-        'schedule'
+        'schedule',
+        'retrying'
     ],
 
     python_requires='>=3.6',

@@ -8,20 +8,10 @@ from .core.configuration import getserverconfig
 logger = logging.getLogger(__name__)
 app = Flask(__name__, static_url_path='')
 
-# app.config.update(
-#     DEBUG=True,
-# )
-
 
 @app.route('/')
 def index():
     return send_from_directory(getserverconfig().dist_path, 'index.html')
-
-
-# @app.route('/robots.txt')
-# def robots():
-#     return '''User-Agent: *
-# Disallow: *'''
 
 
 @app.route('/assets/<path:path>')

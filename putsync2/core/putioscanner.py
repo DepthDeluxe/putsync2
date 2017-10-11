@@ -36,7 +36,7 @@ def __init():
 
     client = client or putiopy.Client(getputsyncconfig().putio_token)
     current_traversed_path = ['']
-    newdownloads = []
+    new_downloads = []
 
 
 def __get_full_path(remote_item):
