@@ -3,7 +3,6 @@ from threading import Thread
 from queue import Queue
 import os
 
-from retrying import retry
 from pony.orm import db_session, select
 import putiopy
 
@@ -29,8 +28,6 @@ class Worker(Thread):
 
             try:
                 processdownload(download_id)
-            except Exception:
-                logger.exception('Failed to download')
             finally:
                 self.tasks.task_done()
 
@@ -56,11 +53,16 @@ def processdownload(id):
     if not checkdownloadvalidandmarkinprogress(id):
         return
 
-    __processdownloadwithretry(id)
+    try:
+        __processdownloadandpossiblyfail(id)
+    except Exception:
+        logger.exception(
+            'Unable to process download in a timely manner, marking as failed'
+        )
+        markfaileddownload(id)
 
 
-@retry(stop_max_attempt_number=3)
-def __processdownloadwithretry(id):
+def __processdownloadandpossiblyfail(id):
     # get the remote file and disable file verification because it is slow
     remote_file = putiopy.Client(getputsyncconfig().putio_token).File.get(id)
     __disable_file_verification(remote_file)
@@ -123,3 +125,8 @@ def getnextdownloadid():
         ).first().remote_file_id
     except AttributeError:
         return None
+
+
+@db_session
+def markfaileddownload(id):
+    Download.get_for_update(id).markfailed()

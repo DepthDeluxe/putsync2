@@ -14,6 +14,7 @@ client = None
 current_traversed_path = None
 new_downloads = []
 
+
 @locked
 @orm.db_session
 def scan(root_id=0):
@@ -22,7 +23,12 @@ def scan(root_id=0):
     # initialize the scanner before using it each time
     __init()
 
-    root_item = client.File.get(root_id)
+    try:
+        root_item = client.File.get(root_id)
+    except Exception:
+        logger.exception('Unable to get root file path, stopping scan')
+        return
+
     current_traversed_path += __get_full_path(root_item)
 
     if __is_folder(root_item):
@@ -67,7 +73,7 @@ def __process_folder_or_print_error(remote_folder):
     try:
         __process_folder(remote_folder)
     except Exception as e:
-        logger.exception('Error scanning folder {remote_folder.name}')
+        logger.exception(f'Error scanning folder {remote_folder.name}')
 
 
 def __process_folder(remote_folder):
@@ -111,16 +117,21 @@ def __process_file(remote_file):
         new_downloads.append(
             Download(
                 remote_file_id=remote_file.id,
-                filepath=os.path.join(*current_traversed_path, remote_file.name),
+                filepath=os.path.join(
+                    *current_traversed_path,
+                    remote_file.name
+                ),
                 size=remote_file.size
             )
         )
 
 
 def __download_exists(remote_file):
-    existing_download = orm.select(d for d in Download if d.remote_file_id == remote_file.id)
+    existing_download = orm.select(
+        d for d in Download
+        if d.remote_file_id == remote_file.id
+    )
     if len(existing_download) > 0:
         return True
     else:
         return False
-
