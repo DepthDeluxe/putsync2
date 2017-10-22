@@ -6,6 +6,7 @@ venv/
 *.egg-info
 activate
 config
+__pycache__/
 
 putsync2-fe/build
 putsync2-fe/package-lock.json
