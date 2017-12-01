@@ -83,7 +83,8 @@ setup(
         'putio.py',
         'Flask',
         'schedule',
-        'retrying'
+        'retrying',
+        'timeout-decorator'
     ],
 
     python_requires='>=3.6',

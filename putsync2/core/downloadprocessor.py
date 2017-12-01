@@ -5,6 +5,7 @@ import os
 
 from pony.orm import db_session, select
 import putiopy
+from timeout_decorator import timeout
 
 from ..core.configuration import getputsyncconfig
 from ..core.models.download import Download, DownloadStatus
@@ -54,7 +55,7 @@ def processdownload(id):
         return
 
     try:
-        __processdownloadandpossiblyfail(id)
+        __processdownloadwithtimeoutandpossiblyfail(id)
     except Exception:
         logger.exception(
             'Unable to process download in a timely manner, marking as failed'
@@ -62,7 +63,8 @@ def processdownload(id):
         markfaileddownload(id)
 
 
-def __processdownloadandpossiblyfail(id):
+@timeout(3*(60*60), use_signals=False)
+def __processdownloadwithtimeoutandpossiblyfail(id):
     # get the remote file and disable file verification because it is slow
     remote_file = putiopy.Client(getputsyncconfig().putio_token).File.get(id)
     __disable_file_verification(remote_file)
