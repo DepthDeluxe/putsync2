@@ -2,35 +2,38 @@ import logging
 from enum import Enum
 import datetime
 
-from pony import orm
+from pony.orm import PrimaryKey, Required, Set, select
 
 from ..db import db
+from .downloadattempt import DownloadAttempt
 
 logger = logging.getLogger(__name__)
 
 
 class DownloadStatus(Enum):
     new = 'new'
-    in_progress = 'in_progress'
     done = 'done'
-    failed = 'failed'
+    attempted = 'attempted'
 
 
 class Download(db.Entity):
-    remote_file_id = orm.PrimaryKey(int, size=64)
-    filepath = orm.Required(str)
-    size = orm.Required(int, size=64)
-    status = orm.Required(str, default=DownloadStatus.new.value)
-    started_at = orm.Optional(datetime.datetime)
-    done_at = orm.Optional(datetime.datetime)
+    remote_file_id = Required(int, size=64)
+    filepath = Required(str)
+    size = Required(int, size=64)
+    status = Required(str, default=DownloadStatus.new.value)
+    attempts = Set(DownloadAttempt)
 
-    def markinprogress(self):
-        self.status = DownloadStatus.in_progress.value
-        self.started_at = datetime.datetime.utcnow()
+    def new(self):
+        self.status = DownloadStatus.new.value
 
-    def markdone(self):
+    def attempted(self):
+        self.status = DownloadStatus.attempted.value
+
+    def done(self):
         self.status = DownloadStatus.done.value
-        self.done_at = datetime.datetime.utcnow()
 
-    def markfailed(self):
-        self.status = DownloadStatus.failed.value
+    def done_at(self):
+        if self.status == DownloadStatus.done.value:
+            max([attempt.done_at for attempt in self.attempts])
+        else:
+            return None

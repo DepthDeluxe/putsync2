@@ -2,14 +2,13 @@ import logging
 import flask
 import datetime
 
-from pony import orm
+from pony.orm import db_session, select, count, sum, desc, max
 import putiopy
 
-from .core import putioscanner
-from .core.configuration import getputsyncconfig
+from .core.scanner import Scanner
+from .core.configuration import PutsyncConfig
 from .core.models.download import Download, DownloadStatus
-
-from .core.db import db
+from .core.models.downloadattempt import DownloadAttempt, DownloadAttemptStatus
 
 api = flask.Blueprint(__name__, __name__, url_prefix='/api')
 logger = logging.getLogger(__name__)
@@ -18,7 +17,7 @@ logger = logging.getLogger(__name__)
 @api.route('/trigger', methods=['POST'])
 def trigger():
     logger.info('POST data: %s', flask.request.form)
-    putioscanner.scan(int(flask.request.form.get('file_id', 0)))
+    Scanner().scan(int(flask.request.form.get('file_id', 0)))
 
     response = {
         'route': '/trigger',
@@ -32,7 +31,7 @@ def trigger():
 @api.route('/full', methods=['POST'])
 def full():
     logger.info(f'POST data: {flask.request.form}')
-    putioscanner.scan()
+    Scanner().scan()
 
     response = {
         'route': '/full',
@@ -44,6 +43,7 @@ def full():
 
 
 @api.route('/downloads')
+@db_session
 def downloads():
     status = flask.request.args.get('status', 'done')
     page = flask.request.args.get('page', 0, type=int)
@@ -53,30 +53,45 @@ def downloads():
     out = {
         'count': count,
         'data': [d.to_dict() for d in downloads]
-        }
+    }
 
     return flask.json.dumps(out)
 
 
-@orm.db_session
+@db_session
 def getdownloadsfilterbystatus(status, page, page_size):
-    data = orm.select(d for d in Download if d.status == status)\
-            .order_by(
-                orm.desc(Download.done_at))[
-                    page*page_size:(page+1)*page_size
-                ]
-    count = orm.select(
-        orm.count(d) for d in Download if d.status == status
-    ).first()
+    status_obj = DownloadAttemptStatus.buildfromstring(status)
 
-    return data, count
+    query = select(
+        a for a in DownloadAttempt
+        if a.started_at == max(
+            b.started_at for b in DownloadAttempt
+            if a.download == b.download
+        )
+    ).order_by(
+        desc(DownloadAttempt.started_at)
+    )
+
+    return query[page*page_size:(page+1)*page_size], query.count()
+
+
+@api.route('/downloads/retry/<int:id>', methods=['POST'])
+@db_session
+def retrydownload(id):
+    # mark as new again
+    Download[id].new()
+    data = Download[id].to_dict()
+
+    return flask.jsonify({
+        'data': data
+    })
 
 
 @api.route('/add', methods=['POST'])
 def add():
     magnet_link = flask.request.json['magnet_link']
 
-    client = putiopy.Client(getputsyncconfig().putio_token)
+    client = putiopy.Client(PutsyncConfig().putio_token)
     client.Transfer.add_url(magnet_link)
 
     return 'Accepted', 202
@@ -90,8 +105,6 @@ def statistics():
     total_count, last_day_count, last_month_count = getdownloadcount()
     # get last download time
     last_download_time = getlastdownloadtime()
-    # get average download rate
-    rate = getaveragedownloadrate()
 
     return flask.jsonify({
         'data': {
@@ -106,27 +119,26 @@ def statistics():
                 '30days': last_month_count
             },
             'last_time': last_download_time,
-            'rate': {'1day': rate}
             }
         })
 
 
-@orm.db_session
+@db_session
 def getbytesdownloaded():
-    total_bytes = orm.sum(
+    total_bytes = sum(
         d.size for d in Download if d.status == DownloadStatus.done.value
     )
-    last_day_bytes = orm.sum(
+    last_day_bytes = sum(
         d.size for d in Download
         if d.status == DownloadStatus.done.value
-        and d.started_at > (
+        and max(d.attempts.started_at) > (
             datetime.datetime.now() - datetime.timedelta(days=1)
         )
     )
-    last_month_bytes = orm.sum(
+    last_month_bytes = sum(
         d.size for d in Download
         if d.status == DownloadStatus.done.value
-        and d.started_at > (
+        and max(d.attempts.started_at) > (
             datetime.datetime.now() - datetime.timedelta(days=30)
         )
     )
@@ -134,23 +146,23 @@ def getbytesdownloaded():
     return total_bytes, last_day_bytes, last_month_bytes
 
 
-@orm.db_session
+@db_session
 def getdownloadcount():
-    total_count = orm.count(
+    total_count = count(
         d.size for d in Download
         if d.status == DownloadStatus.done.value
     )
-    last_day_count = orm.count(
+    last_day_count = count(
         d.size for d in Download
         if d.status == DownloadStatus.done.value
-        and d.started_at > (
+        and max(d.attempts.started_at) > (
             datetime.datetime.now() - datetime.timedelta(days=1)
         )
     )
-    last_month_count = orm.count(
+    last_month_count = count(
         d.size for d in Download
         if d.status == DownloadStatus.done.value
-        and d.started_at > (
+        and max(d.attempts.started_at) > (
             datetime.datetime.now() - datetime.timedelta(days=30)
         )
     )
@@ -158,23 +170,11 @@ def getdownloadcount():
     return total_count, last_day_count, last_month_count
 
 
-@orm.db_session
+@db_session
 def getlastdownloadtime():
-    t = orm.max(
-        d.done_at for d in Download
-        if d.status == DownloadStatus.done.value
+    t = max(
+        attempt.done_at for attempt in DownloadAttempt
+        if attempt.status == DownloadAttemptStatus.successful.value
     )
 
     return t
-
-
-@orm.db_session
-def getaveragedownloadrate():
-    rate = db.select('''
-    AVG(size / ((julianday(done_at) - julianday(started_at)) * 86400.0))
-FROM
-    Download
-WHERE
-    status = 'done' ''')
-
-    return rate

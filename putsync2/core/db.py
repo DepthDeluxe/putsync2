@@ -5,12 +5,15 @@ import os
 from pony import orm
 from pony.orm.dbapiprovider import StrConverter
 
-from .configuration import getputsyncconfig
+from .configuration import PutsyncConfig
 
 logger = logging.getLogger(__name__)
 
-# set to none on initialization as it relies on config which is initialized in main()
+
+# set to none on initialization as it relies on config which is
+# initialized in main()
 db = orm.Database()
+
 
 class EnumConverter(StrConverter):
     def validate(self, val):
@@ -37,7 +40,7 @@ def init():
     # properly format the relative pathing for db file.  If this isn't done,
     # pony will choose the location of script file as the current directory
     # for some unknown reason
-    database_path = getputsyncconfig().database_path
+    database_path = PutsyncConfig().database_path
     if database_path[0] != '/':
         database_path = os.getcwd() + '/' + database_path
 

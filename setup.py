@@ -1,10 +1,3 @@
-"""A setuptools based setup module.
-
-See:
-https://packaging.python.org/en/latest/distributing.html
-https://github.com/pypa/sampleproject
-"""
-
 # Always prefer setuptools over distutils
 from setuptools import setup, find_packages
 
@@ -24,9 +17,9 @@ setup(
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
-    version='0.0.1',
+    version='0.1.0',
 
-    description='Putsync2 core program',
+    description='Syncs put.io directory with a local filesystem',
     long_description='',
 
     # The project's main homepage.
@@ -49,7 +42,6 @@ setup(
 
         # Indicate who your project is intended for
         'Intended Audience :: Developers',
-        'Topic :: Software Development :: Build Tools',
 
         # Pick your license as you wish (should match "license" above)
         'License :: OSI Approved :: MIT License',
@@ -60,7 +52,7 @@ setup(
     ],
 
     # What does your project relate to?
-    # keywords='sample setuptools development',
+    keywords='put.io sync filesync',
 
 
     # You can just specify the packages manually here if your project is
@@ -84,7 +76,6 @@ setup(
         'Flask',
         'schedule',
         'retrying',
-        'timeout-decorator'
     ],
 
     python_requires='>=3.6',
@@ -116,7 +107,6 @@ setup(
     # pip to create the appropriate form of executable for the target platform.
     entry_points={
         'console_scripts': [
-            'putsync2=putsync2.main:main',
         ],
     },
 )

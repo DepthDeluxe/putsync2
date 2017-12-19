@@ -1,7 +1,7 @@
 <template>
     <div>
-        <h1>Home</h1>
-        <p>Latest completed downloads:</p>
+        <h1>History</h1>
+        <p>Ordered history of downloads.</p>
         <div>
             <el-table
                 :data="table_data"

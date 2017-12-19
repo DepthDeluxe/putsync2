@@ -1,19 +1,26 @@
 <template>
     <div id="app">
-        <h2 class="site-header">Putsync Web UI</h2>
-        <el-menu theme="dark" :default-active="active_index" mode="horizontal" @select="handleselect">
-            <el-menu-item index="/">Home</el-menu-item>
-            <el-menu-item index="/history">History</el-menu-item>
-            <el-menu-item index="/statistics">Statistics</el-menu-item>
-        </el-menu>
+        <el-row>
+            <el-col :span="4">
+            </el-col>
+            <el-col :span="20">
+                <el-menu :default-active="active_index" mode="horizontal" @select="handleselect">
+                    <h1 class="site-header">Putsync2</h1>
+                    <el-menu-item index="/">Home</el-menu-item>
+                    <el-menu-item index="/history">History</el-menu-item>
+                    <el-menu-item index="/add">Add Magnet Link</el-menu-item>
+                    <el-menu-item index="/statistics">Statistics</el-menu-item>
+                </el-menu>
+            </el-col>
+        </el-row>
 
-            <el-row>
-                <el-col :span="20" :offset="2">
-                    <div class="content">
-                        <router-view></router-view>
-                    </div>
-                </el-col>
-            </el-row>
+        <el-row>
+            <el-col :span="20" :offset="2">
+                <div class="content">
+                    <router-view></router-view>
+                </div>
+            </el-col>
+        </el-row>
     </div>
 </template>
 
@@ -54,5 +61,9 @@ body {
 }
 
 .site-header {
+    float: left;
+    line-height: 15px;
+
+    margin-right: 25px;
 }
 </style>
