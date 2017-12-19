@@ -154,7 +154,7 @@ def _cleaninprocesssessions():
     )
     attempts = select(
         a for a in DownloadAttempt
-        if a.status == DownloadAttempt.in_progress.value
+        if a.status == DownloadAttemptStatus.in_progress.value
     )[:]
 
     for attempt in attempts:
