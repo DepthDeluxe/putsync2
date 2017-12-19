@@ -14,17 +14,6 @@ logger = logging.getLogger(__name__)
 
 
 class Processor(object):
-    @db_session
-    @staticmethod
-    def cleaninprocesssessions():
-        attempts = select(
-            a for a in DownloadAttempt
-            if a.status == DownloadAttempt.in_progress.value
-        )[:]
-
-        for attempt in attempts:
-            attempt.status = DownloadAttemptStatus.failed
-
     def continuous(self):
         logger.info('Starting download processor in continuous mode')
         while True:
@@ -43,6 +32,7 @@ class Processor(object):
                 if d.status == DownloadStatus.new.value
             ).for_update()[:1][0]
         except IndexError:
+            logger.warn('No download found to be processed')
             return None
 
     @db_session
@@ -138,10 +128,13 @@ class ProcessorThread(Thread):
 
     @staticmethod
     def buildmultiplefromconfigandstart():
+        logger.info('Building multiple threads as per config')
+
         # clean current sessions in progress before starting
-        Processor.cleaninprocesssessions()
+        _cleaninprocesssessions()
 
         config = PutsyncConfig()
+        logger.info(f'Will spawn {config.processor_threads} threads')
 
         threads = []
         for i in range(0, config.processor_threads):
@@ -149,23 +142,20 @@ class ProcessorThread(Thread):
             processor.start()
             threads.append(processor)
 
+        logger.info('Started all threads')
         return threads
 
 
-if __name__ == '__main__':
-    from . import db
-    from .configuration import Config
+@db_session
+def _cleaninprocesssessions():
+    logger.info(
+        'Cleaning existing sessions, will typically be called on '
+        'initialization'
+    )
+    attempts = select(
+        a for a in DownloadAttempt
+        if a.status == DownloadAttempt.in_progress.value
+    )[:]
 
-    print('-----')
-    loggerformat =\
-        '%(asctime)-15s [%(levelname)s] : %(name)s : %(thread)d : %(message)s'
-    logging.basicConfig(format=loggerformat, level=logging.INFO)
-    logger.warn(f'Log level set to {logging.INFO}')
-
-    Config.setconfigfilepath('./dev-config.ini')
-
-    db.init()
-    threads = ProcessorThread.buildmultiplefromconfigandstart()
-
-    while True:
-        time.sleep(1)
+    for attempt in attempts:
+        attempt.status = DownloadAttemptStatus.failed
