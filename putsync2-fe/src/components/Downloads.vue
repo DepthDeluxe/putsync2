@@ -5,6 +5,7 @@
 
         <p>Items actively downloading</p>
         <el-table
+            v-loading="table_loading"
             :data="table_data"
             style="width: 100%"
             height=500
@@ -22,6 +23,7 @@
 export default {
     data() {
         return {
+            table_loading: false,
             table_update_interval_id: null,
             table_data: [],
             is_scanning: false
@@ -31,8 +33,12 @@ export default {
     },
     methods: {
         gettabledata() {
+            this.table_loading = true
+
             return this.$http.get('/api/downloads?status=in_progress').then(response => {
                 this.table_data = response.body.data
+            }).then(() => {
+                this.table_loading = false
             })
         },
         triggerscan() {

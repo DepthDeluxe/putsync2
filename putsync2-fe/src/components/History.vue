@@ -4,6 +4,7 @@
         <p>Ordered history of downloads.</p>
         <div>
             <el-table
+                v-loading="table_loading"
                 :data="table_data"
                 style="width: 100%"
                 stripe
@@ -31,6 +32,7 @@
 export default {
     data () {
         return {
+            table_loading: false,
             table_update_interval_id: null,
             download_page: 1,
             download_page_size: 8,
@@ -60,7 +62,10 @@ export default {
         }
     },
     mounted() {
-        this.gettabledata()
+        this.table_loading = true
+        this.gettabledata().then(() => {
+            this.table_loading = false
+        })
 
         this.table_update_interval_id = setInterval(this.gettabledata, 10000)
     },

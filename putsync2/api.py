@@ -67,9 +67,9 @@ def getdownloadsfilterbystatus(status, page, page_size):
         if a.started_at == max(
             b.started_at for b in DownloadAttempt
             if a.download == b.download
-        )
+        ) and a.status == status_obj.value
     ).order_by(
-        desc(DownloadAttempt.started_at)
+        desc(DownloadAttempt.done_at)
     )
 
     return query[page*page_size:(page+1)*page_size], query.count()

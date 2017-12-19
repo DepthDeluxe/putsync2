@@ -9,6 +9,6 @@ from .webapp import app
 
 logger = logging.getLogger(__name__)
 
-ProcessorThread().start()
+ProcessorThread().buildmultiplefromconfigandstart()
 ScannerThread().start()
 app.run(port=9000)

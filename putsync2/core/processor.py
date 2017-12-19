@@ -69,16 +69,15 @@ class Processor(object):
 
     def _attemptdownload(self, download):
         remote_file = self._getremotefile(download)
-        full_local_media_path = os.path.dirname(
-            os.path.join(
-                PutsyncConfig().media_path,
-                download.filepath
-            )
+        full_filepath = os.path.join(
+            PutsyncConfig().media_path,
+            download.filepath
         )
+        full_local_media_path = os.path.dirname(full_filepath)
 
         # remove the destination file if exists
         try:
-            os.remove(full_local_media_path, str(download.name))
+            os.remove(full_filepath)
             logger.warn('Destination file exists, deleted it to perform download')
         except FileNotFoundError:
             logger.info('No destination file found')
@@ -158,4 +157,4 @@ def _cleaninprocesssessions():
     )[:]
 
     for attempt in attempts:
-        attempt.status = DownloadAttemptStatus.failed
+        attempt.status = DownloadAttemptStatus.failed.value
