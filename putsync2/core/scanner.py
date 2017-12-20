@@ -125,6 +125,6 @@ class ScannerThread(Thread):
 
         while True:
             logger.info(f'Sleeping for {scan_interval} minutes before running full scan')
-            time.sleep((60*60)*scan_interval)
+            time.sleep(60*scan_interval)
 
             Scanner().scan()
