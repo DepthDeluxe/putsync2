@@ -16,7 +16,7 @@ def index():
 
 @app.route('/assets/<path:path>')
 def assets(path):
-    return send_from_directory(WebappConfig().dist_path, path)
+    return send_from_directory(WebappConfig().absolutedistpath(), path)
 
 
 app.register_blueprint(api)

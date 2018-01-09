@@ -3,9 +3,8 @@ import time
 import os
 
 from .core import db
+from .core.offline import ConfiguredSchedulePool
 from .core.configuration import Config
-from .core.processor import ProcessorThread
-from .core.scanner import ScannerThread
 from .webapp import app
 
 logger = logging.getLogger(__name__)
@@ -21,14 +20,14 @@ logger.warn(f'Using config file {config_path}')
 Config.setconfigfilepath(config_path)
 db.init()
 
+webapp = app
+
 
 def processor():
-    logger.warn('Starting up in processor mode')
-    ProcessorThread.buildmultiplefromconfigandstart()
-    ScannerThread().start()
+    logger.warn('Starting in processor mode')
+    pool = ConfiguredSchedulePool()
+
+    pool.start()
 
     while True:
-        time.sleep(1)
-
-
-webapp = app
+        time.sleep(10)

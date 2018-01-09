@@ -1,14 +1,15 @@
 import logging
 import flask
-import datetime
+import sys
 
 from pony.orm import db_session, select, count, sum, desc, max
 import putiopy
 
+from .core import filecollection
+from .core.models.file import File
+from .core.models.syncattempt import SyncAttempt
 from .core.scanner import Scanner
 from .core.configuration import PutsyncConfig
-from .core.models.download import Download, DownloadStatus
-from .core.models.downloadattempt import DownloadAttempt, DownloadAttemptStatus
 
 api = flask.Blueprint(__name__, __name__, url_prefix='/api')
 logger = logging.getLogger(__name__)
@@ -49,41 +50,22 @@ def downloads():
     page = flask.request.args.get('page', 0, type=int)
     page_size = flask.request.args.get('page-size', 25, type=int)
 
-    downloads, count = getdownloadsfilterbystatus(status, page, page_size)
+    files, file_count = filecollection.synchistory(status, page+1, page_size)
     out = {
-        'count': count,
-        'data': [d.to_dict() for d in downloads]
+        'count': file_count,
+        'data': [f.to_dict() for f in files]
     }
 
     return flask.json.dumps(out)
 
 
-@db_session
-def getdownloadsfilterbystatus(status, page, page_size):
-    status_obj = DownloadAttemptStatus.buildfromstring(status)
-
-    query = select(
-        a for a in DownloadAttempt
-        if a.started_at == max(
-            b.started_at for b in DownloadAttempt
-            if a.download == b.download
-        ) and a.status == status_obj.value
-    ).order_by(
-        desc(DownloadAttempt.done_at)
-    )
-
-    return query[page*page_size:(page+1)*page_size], query.count()
-
-
 @api.route('/downloads/retry/<int:id>', methods=['POST'])
 @db_session
 def retrydownload(id):
-    # mark as new again
-    Download[id].new()
-    data = Download[id].to_dict()
+    file = File[id].markforretry()
 
     return flask.jsonify({
-        'data': data
+        'data': file.to_dict()
     })
 
 
@@ -99,12 +81,16 @@ def add():
 
 @api.route('/statistics')
 def statistics():
-    # get bytes downloaded
-    total_bytes, last_day_bytes, last_month_bytes = getbytesdownloaded()
-    # get number of downloads
-    total_count, last_day_count, last_month_count = getdownloadcount()
+    total_bytes = filecollection.bytesndays(100000)
+    last_day_bytes = filecollection.bytesndays(1)
+    last_month_bytes = filecollection.bytesndays(30)
+
+    total_count = filecollection.countndays(100000)
+    last_day_count = filecollection.countndays(1)
+    last_month_count = filecollection.countndays(30)
+
     # get last download time
-    last_download_time = getlastdownloadtime()
+    last_download_time = None
 
     return flask.jsonify({
         'data': {
@@ -121,60 +107,3 @@ def statistics():
             'last_time': last_download_time,
             }
         })
-
-
-@db_session
-def getbytesdownloaded():
-    total_bytes = sum(
-        d.size for d in Download if d.status == DownloadStatus.done.value
-    )
-    last_day_bytes = sum(
-        d.size for d in Download
-        if d.status == DownloadStatus.done.value
-        and max(d.attempts.started_at) > (
-            datetime.datetime.now() - datetime.timedelta(days=1)
-        )
-    )
-    last_month_bytes = sum(
-        d.size for d in Download
-        if d.status == DownloadStatus.done.value
-        and max(d.attempts.started_at) > (
-            datetime.datetime.now() - datetime.timedelta(days=30)
-        )
-    )
-
-    return total_bytes, last_day_bytes, last_month_bytes
-
-
-@db_session
-def getdownloadcount():
-    total_count = count(
-        d.size for d in Download
-        if d.status == DownloadStatus.done.value
-    )
-    last_day_count = count(
-        d.size for d in Download
-        if d.status == DownloadStatus.done.value
-        and max(d.attempts.started_at) > (
-            datetime.datetime.now() - datetime.timedelta(days=1)
-        )
-    )
-    last_month_count = count(
-        d.size for d in Download
-        if d.status == DownloadStatus.done.value
-        and max(d.attempts.started_at) > (
-            datetime.datetime.now() - datetime.timedelta(days=30)
-        )
-    )
-
-    return total_count, last_day_count, last_month_count
-
-
-@db_session
-def getlastdownloadtime():
-    t = max(
-        attempt.done_at for attempt in DownloadAttempt
-        if attempt.status == DownloadAttemptStatus.successful.value
-    )
-
-    return t

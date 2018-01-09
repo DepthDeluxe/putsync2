@@ -1,4 +1,5 @@
 NPM ?= npm
+NODE ?= node
 
 .PHONY: install build
 

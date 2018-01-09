@@ -1,4 +1,7 @@
 from configparser import ConfigParser
+import os
+
+import putiopy
 
 
 class ConfigError(Exception):
@@ -37,6 +40,9 @@ class WebappConfig(Config):
 
         self.dist_path = self.get('dist_path')
 
+    def absolutedistpath(self):
+        return os.path.abspath(self.dist_path)
+
 
 class PutsyncConfig(Config):
     def __init__(self):
@@ -49,3 +55,8 @@ class PutsyncConfig(Config):
         self.processor_threads = self.getint('processor_threads')
         self.full_scan_interval_minutes = self.getint('full_scan_interval_minutes')
         self.disable_downloading = self.getboolean('disable_downloading')
+
+    def getclient(self):
+        return putiopy.Client(
+            self.putio_token
+        )

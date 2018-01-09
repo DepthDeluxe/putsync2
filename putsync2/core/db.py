@@ -1,9 +1,7 @@
-from enum import Enum
 import logging
 import os
 
 from pony import orm
-from pony.orm.dbapiprovider import StrConverter
 
 from .configuration import PutsyncConfig
 
@@ -15,23 +13,11 @@ logger = logging.getLogger(__name__)
 db = orm.Database()
 
 
-class EnumConverter(StrConverter):
-    def validate(self, val):
-        if not isinstance(val, Enum):
-            raise ValueError(f'Must be an enum, type is {type(val)}')
-        return val
-
-    def py2sql(self, val):
-        return val.name
-
-    def sql2py(self, val):
-        return self.py_type[val]
-
-    def val2dbval(self, val):
-        return val.name
-
-    def dbval2val(self, val):
-        return self.py_type[val]
+class PutsyncEntity(db.Entity):
+    @orm.db_session
+    @classmethod
+    def clean(cls):
+        cls.delete()
 
 
 def init():
@@ -45,5 +31,5 @@ def init():
         database_path = os.getcwd() + '/' + database_path
 
     db.bind(provider='sqlite', filename=database_path, create_db=True)
-    db.provider.converter_classes.append((Enum, EnumConverter))
     db.generate_mapping(create_tables=True)
+    orm.set_sql_debug(True)

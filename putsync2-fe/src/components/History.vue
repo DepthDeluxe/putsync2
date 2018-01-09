@@ -10,7 +10,7 @@
                 stripe
                 border>
                 <el-table-column prop="filepath" width="450" label="Name"></el-table-column>
-                <el-table-column prop="done_at" width="300" label="Downloaded At"></el-table-column>
+                <el-table-column prop="finished_at" width="300" label="Complete At"></el-table-column>
                 <el-table-column prop="size" label="Size"></el-table-column>
             </el-table>
             <div style="text-align:center; padding:10px">
@@ -49,7 +49,7 @@ export default {
         },
         gettabledata() {
             console.log('Getting table data')
-            var query_string = 'status=done'
+            var query_string = 'status=successful'
             query_string += '&page=' + (this.download_page-1)
             query_string += '&page-size=' + this.download_page_size
 

@@ -3,12 +3,13 @@ import time
 
 from .core import db
 from .core.configuration import Config
-from .core.processor import ProcessorThread
-from .core.scanner import ScannerThread
+from .core.offline import ConfiguredSchedulePool
 from .webapp import app
+
+from pony.orm import db_session
 
 logger = logging.getLogger(__name__)
 
-ProcessorThread().buildmultiplefromconfigandstart()
-ScannerThread().start()
+pool = ConfiguredSchedulePool()
+pool.start()
 app.run(port=9000)
