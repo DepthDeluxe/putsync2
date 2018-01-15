@@ -5,41 +5,47 @@ from pony.orm import db_session, commit
 
 from . import filecollection
 from .configuration import PutsyncConfig
+from .models.file import File
 from .models.syncattempt import SyncAttempt
 
 logger = logging.getLogger(__name__)
 
 
 class SyncEngine(object):
-    @db_session
     def syncnextpendingfile(self):
-        self.current_file = filecollection.nextpending()
-        if self.current_file is None:
-            logger.warn('Nothing found to sync')
-            return None
+        with db_session:
+            file = filecollection.nextpending()
+            if file is None:
+                logger.warn('Nothing found to sync')
+                return None
 
-        self.current_attempt = SyncAttempt(file=self.current_file)
-        commit()
+            attempt = SyncAttempt(file=file)
+            commit()
+
+            file_id = file.id
+            attempt_id = attempt.id
+
+            remote_file = File[file_id].remotefile()
+            full_filepath = os.path.join(
+                PutsyncConfig().media_path,
+                File[file_id].filepath
+            )
 
         try:
-            self._attempt()
+            self._attempt(remote_file, full_filepath)
 
             # if no uncaught exceptions, we are successful
-            self.current_attempt.successful()
+            with db_session:
+                SyncAttempt[attempt_id].successful()
         except Exception as e:
             logger.exception('Uncaught exception when processing the download')
 
-            self.current_attempt.failed(str(e))
+            with db_session:
+                SyncAttempt[attempt_id].failed(str(e))
 
-        return self.current_attempt, self.current_file
+        return file_id, attempt_id
 
-    @db_session
-    def _attempt(self):
-        remote_file = self.current_file.remotefile()
-        full_filepath = os.path.join(
-            PutsyncConfig().media_path,
-            self.current_file.filepath
-        )
+    def _attempt(self, remote_file, full_filepath):
         parent_folderpath = os.path.dirname(full_filepath)
 
         # remove the destination file if exists

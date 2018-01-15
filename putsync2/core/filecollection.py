@@ -1,9 +1,8 @@
 import logging
 from datetime import datetime, timedelta
 
-from pony.orm import select, count, db_session, sum, desc, commit
+from pony.orm import select, count, db_session, sum, desc
 
-from .configuration import PutsyncConfig
 from .models.file import File
 from .models.syncattempt import SyncAttempt
 
@@ -102,14 +101,28 @@ def pendingfiles():
 @db_session
 def nextpending():
     # find something that doesn't have any successful attempts
-    # TODO(colin): implement ordering
-    return select(
-        f for f in File
-        if count(
-            a for a in f.attempts
-            if a.status == 'successful'
-        ) == 0
-    ).for_update().first()
+    # do not wait for the row lock, will throw exception which
+    # will trigger retry
+    for i in range(10):
+        file = select(
+            f for f in File
+            if count(
+                a for a in f.attempts
+                if a.status == SyncAttempt.Status.successful
+            ) == 0
+        ).for_update().first()
+
+        if file is None:
+            return None
+
+        in_progrsss_count = len([
+            a for a in file.attempts
+            if a.status == SyncAttempt.Status.in_progress
+        ]) > 0
+
+        if in_progrsss_count == 0:
+            logger.info(f'Found file, took {i} attempts')
+            return file
 
 
 @db_session
