@@ -3,6 +3,7 @@ import flask
 
 import putiopy
 
+from .core.db import SessionContext
 from .core.models.file import FileCollection
 from .core.models.file import File
 from .core.scanner import Scanner
@@ -46,7 +47,9 @@ def downloads():
     page = flask.request.args.get('page', 0, type=int)
     page_size = flask.request.args.get('page-size', 25, type=int)
 
-    files, file_count = FileCollection().query(status, page+1, page_size)
+    with SessionContext() as session:
+        files, file_count = FileCollection(session).query(status, page+1, page_size)
+
     out = {
         'count': file_count,
         'data': [f.to_dict() for f in files]
@@ -76,13 +79,16 @@ def add():
 
 @api.route('/statistics')
 def statistics():
-    total_bytes = FileCollection().bytesndays(100000)
-    last_day_bytes = FileCollection().bytesndays(1)
-    last_month_bytes = FileCollection().bytesndays(30)
+    with SessionContext() as session:
+        file_collection = FileCollection(session)
 
-    total_count = FileCollection().countndays(100000)
-    last_day_count = FileCollection().countndays(1)
-    last_month_count = FileCollection().countndays(30)
+        total_bytes = file_collection.bytesndays(100000)
+        last_day_bytes = file_collection.bytesndays(1)
+        last_month_bytes = file_collection.bytesndays(30)
+
+        total_count = file_collection.countndays(100000)
+        last_day_count = file_collection.countndays(1)
+        last_month_count = file_collection.countndays(30)
 
     # get last download time
     last_download_time = None

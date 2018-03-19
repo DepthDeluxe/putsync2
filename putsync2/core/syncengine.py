@@ -2,8 +2,9 @@ import logging
 import os
 from datetime import datetime
 
-from pony.orm import db_session, commit
+from sqlalchemy.orm.session import make_transient
 
+from .db import SessionContext, Session
 from .models.file import FileCollection, File, FileStatus
 from .configuration import PutsyncConfig
 from .models.file import File
@@ -13,43 +14,45 @@ logger = logging.getLogger(__name__)
 
 class SyncEngine(object):
     def syncnextpendingfile(self):
+        with SessionContext() as session:
+            file = session.query(File)\
+                .filter_by(status=FileStatus.new)\
+                .first()
+
+            if file is None:
+                logger.warn('No file found to sync')
+                return None
+
+            logger.info(f'Processing file {file.id}')
+            file.start()
+
+            id_ = file.id
+
+        # get transient copy from DB, need transient so the long-running
+        # download doesn't eat a session
+        with SessionContext(autocommit=False) as session:
+            file = session.query(File).get(id_)
+            make_transient(file)
+
         try:
-            with db_session(serializable=True):
-                file = File.get(status=FileStatus.new)
-
-                if file is None:
-                    logger.warn('No file found to sync')
-                    return None
-
-                file.status = FileStatus.syncing
-                file.started_at = datetime.utcnow()
-
-                id_ = file.id
-                remote_file = file.remotefile()
-                filepath = file.filepath
+            self._attempt(file)
+            file.done()
         except Exception as e:
-            import ipdb; ipdb.set_trace()
-            logger.exception('Some uncaught exception in above')
+            logger.exception('Exception {e} fired when processing file {file.filepath}')
+            file.fail()
 
+        # remerge detached object back with session
+        with SessionContext() as session:
+            session.merge(file)
+
+            return file.id
+
+    def _attempt(self, file):
         full_filepath = os.path.join(
             PutsyncConfig().media_path,
-            filepath
+            file.filepath
         )
 
-        try:
-            self._attempt(remote_file, full_filepath)
-            failed = False
-        except Exception as e:
-            logger.exception('Uncaught exception when processing the download')
-            failed = True
-
-        with db_session:
-            if failed:
-                File[id_].fail()
-            else:
-                File[id_].done()
-
-    def _attempt(self, remote_file, full_filepath):
         parent_folderpath = os.path.dirname(full_filepath)
 
         # remove the destination file if exists
@@ -70,4 +73,9 @@ class SyncEngine(object):
         if PutsyncConfig().disable_downloading:
             logger.warn(f'Configured to disable real downloading')
         else:
-            remote_file.download(dest=parent_folderpath)
+            file.remote_file().download(dest=parent_folderpath)
+
+
+if __name__ == '__main__':
+    logger.warn('Running sync engine in one-off mode')
+    SyncEngine().syncnextpendingfile()

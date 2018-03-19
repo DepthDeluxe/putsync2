@@ -1,36 +1,40 @@
 from datetime import datetime, timedelta
 import logging
-from enum import Enum
+import enum
+import functools
 
-from pony.orm import Required, Optional, db_session, select, count, \
-                     sum, desc
+from sqlalchemy import Column, Integer, String, DateTime, Enum, func
 
-from ..db import PutsyncEntity
+
+from ..db import Base
 from ..configuration import PutsyncConfig
 
 logger = logging.getLogger(__name__)
 
 
-class FileStatus(Enum):
+class FileStatus(enum.Enum):
     new = 'new'
     in_progress = 'in_progress'
-    done = 'new'
+    done = 'done'
 
 
-class File(PutsyncEntity):
-    putsync_id = Required(int, size=64)
-    filepath = Required(str)
-    size = Required(int, size=64)
-    status = Required(FileStatus, default=FileStatus.new)
-    started_at = Optional(datetime)
-    done_at = Optional(datetime)
-    attempt_count = Required(int, default=0)
+class File(Base):
+    __tablename__ = 'files'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    putsync_id = Column(Integer)
+    filepath = Column(String)
+    size = Column(Integer)
+    status = Column(Enum(FileStatus), default=FileStatus.new)
+    started_at = Column(DateTime)
+    done_at = Column(DateTime)
+    attempt_count = Column(Integer, default=0)
 
     def move(self, new_filepath):
         pass
 
     def start(self):
-        self.status = FileStatus.syncing
+        self.status = FileStatus.in_progress
         self.started_at = datetime.utcnow()
         self.done_at = None
         self.attempt_count += 1
@@ -43,6 +47,7 @@ class File(PutsyncEntity):
         self.status = FileStatus.new
         self.done_at = datetime.utcnow()
 
+    @functools.lru_cache(maxsize=32)
     def remotefile(self):
         # we want to disable file verification becuase it takes a very long
         # time to run on a Raspberry Pi.  We want to maximize the download
@@ -60,7 +65,9 @@ class File(PutsyncEntity):
 
 
 class FileCollection(object):
-    @db_session
+    def __init__(self, session):
+        self._session = session
+
     def add(self, remote_file, filepath):
         existing = self._getexistingdownload(remote_file.id)
         if existing is None:
@@ -71,48 +78,48 @@ class FileCollection(object):
                 filepath=filepath,
                 size=remote_file.size
             )
+            self._session.add(file)
 
             return file
         else:
             logger.warn('Remote file already exists in the collection')
             return existing
 
-    @db_session
     def _getexistingdownload(self, remote_id):
-        return select(
-            f for f in File
-            if f.putsync_id == remote_id
-        ).first()
+        return self._session.query(File)\
+            .filter_by(putsync_id=remote_id)\
+            .first()
 
-    @db_session
     def getbyid(self, id_):
-        return File[id_]
+        return self._session.query(File).get(id_)
 
-    @db_session
-    def query(self, status=FileStatus.done.value, page=1, page_size=10):
-        import ipdb; ipdb.set_trace()
-        # TODO(colin): implement enum support
-        query = select(
-            f for f in File
-            if f.status == status
-        )
+    def query(self, status=FileStatus.done, page=1, page_size=10):
+        results = self._session.query(File, func.count(File.id))\
+            .filter_by(status=status)\
+            .offset(page*page_size)\
+            .limit(page_size)\
+            .all()
 
-        return query.page(page, page_size), query.count()
+        try:
+            records = [x[0] for x in results]
+            count = results[0][1]
+        except IndexError:
+            records = []
+            count = 0
 
-    @db_session
+        return records, count
+
     def inprogress(self, page=1, page_size=10):
         return self.query(
-            status=FileStatus.syncing,
+            status=FileStatus.in_progress,
             page=page,
             page_size=page_size
         )
 
-    @db_session
     def countndays(n):
         logger.error('Not implemented')
         return 0
 
-    @db_session
     def bytesndays(n):
         logger.error('Not implemented')
         return 0

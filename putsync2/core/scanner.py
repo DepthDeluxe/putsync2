@@ -4,8 +4,8 @@ from threading import Thread
 import time
 
 import putiopy
-from pony.orm import db_session, select
 
+from .db import SessionContext
 from .models.file import FileCollection
 from .configuration import PutsyncConfig
 
@@ -90,9 +90,10 @@ class Scanner(object):
                 remote_file.name
             )
 
-            FileCollection().add(
-                remote_file=remote_file,
-                filepath=filepath
-            )
+            with SessionContext() as session:
+                FileCollection(session).add(
+                    remote_file=remote_file,
+                    filepath=filepath
+                )
         except Exception as e:
             logger.exception(f'Error scanning file {remote_file.name}')

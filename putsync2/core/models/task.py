@@ -1,22 +1,26 @@
 from datetime import datetime
+import enum
 import logging
 
-from pony.orm import PrimaryKey, Required, Optional
+from sqlalchemy import Column, String, DateTime, Enum
 
-from ..db import PutsyncEntity
+from ..db import Base
 
 logger = logging.getLogger(__name__)
 
 
-class Task(PutsyncEntity):
-    class Status(object):
-        running = 'running'
-        idle = 'idle'
+class TaskStatus(enum.Enum):
+    running = 'running'
+    idle = 'idle'
 
-    name = PrimaryKey(str)
-    status = Required(str, default=Status.idle)
-    started_at = Optional(datetime)
-    stopped_at = Optional(datetime)
+
+class Task(Base):
+    __tablename__ = 'tasks'
+
+    name = Column(String, primary_key=True)
+    status = Column(Enum(TaskStatus))
+    started_at = Column(DateTime)
+    stopped_at = Column(DateTime)
 
     def running(self):
         if self.status != self.Status.idle:

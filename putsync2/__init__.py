@@ -11,7 +11,6 @@ logger = logging.getLogger(__name__)
 
 config_path = os.environ.get('PUTSYNC_CONFIG', 'config.ini')
 
-print('-----')
 loggerformat =\
     '%(asctime)-15s [%(levelname)-8s] : %(name)-20s : %(thread)d : %(message)s'
 logging.basicConfig(format=loggerformat, level=logging.INFO)

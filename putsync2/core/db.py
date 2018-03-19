@@ -3,50 +3,50 @@ from enum import Enum
 import logging
 import os
 
-from pony.orm import db_session, Database
-from pony.orm.dbapiprovider import StrConverter
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.declarative import declarative_base
 
 from .configuration import PutsyncConfig
 
 logger = logging.getLogger(__name__)
 
 
-# set to none on initialization as it relies on config which is
-# initialized in main()
-db = Database()
+Base = declarative_base()
+Session = sessionmaker()
 
 
-class PutsyncEntity(db.Entity):
-    @db_session
-    @classmethod
-    def clean(cls):
-        cls.delete()
+class SessionContext(object):
+    def __init__(self, autocommit=True):
+        logger.debug('Starting new session')
+        self._session = Session()
+        self._autocommit = autocommit
 
+    def __enter__(self):
+        return self._session
 
-class EnumConverter(StrConverter):
-    def validate(self, val, obj):
-        if not isinstance(val, Enum):
-            raise ValueError(f'Type must be enum, got {type(val)}')
+    def __exit__(self, type, value, traceback):
+        logger.debug('Exiting session')
+        if type is None:
+            if self._autocommit:
+                logger.debug('Since no exception, comitting before close')
+                self._session.commit()
+        else:
+            logger.debug('Hit exception, rolling back session before close')
+            self._session.rollback()
 
-        return val
-
-    def py2sql(self, val):
-        return val.name
-
-    def sql2py(self, value):
-        return self.py_type[value]
+        self._session.close()
 
 
 def init():
-    logger.info('Initializing database, creating tables as necessary')
-
     # properly format the relative pathing for db file.  If this isn't done,
     # pony will choose the location of script file as the current directory
     # for some unknown reason
     database_path = PutsyncConfig().database_path
     if database_path[0] != '/':
-        database_path = os.getcwd() + '/' + database_path
+        database_path = (os.getcwd() + '/' + database_path).replace('/./', '/')
 
-    db.bind(provider='sqlite', filename=database_path, create_db=True)
-    db.provider.converter_classes.append((Enum, EnumConverter))
-    db.generate_mapping(create_tables=True)
+    engine = create_engine(f'sqlite:///{database_path}')
+    Session.configure(bind=engine)
+
+    Base.metadata.create_all(engine)
