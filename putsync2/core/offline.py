@@ -5,7 +5,6 @@ import schedule
 import logging
 import time
 
-from . import filecollection
 from .configuration import PutsyncConfig
 from .scanner import Scanner
 from .syncengine import SyncEngine
@@ -105,8 +104,6 @@ class SchedulePool(object):
 
 class ConfiguredSchedulePool(object):
     def __init__(self):
-        filecollection.cleaninprogressattempts()
-
         config = PutsyncConfig()
         tasks_count = config.processor_threads
 

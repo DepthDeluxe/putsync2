@@ -1,49 +1,53 @@
 import logging
 import os
+from datetime import datetime
 
 from pony.orm import db_session, commit
 
-from . import filecollection
+from .models.file import FileCollection, File, FileStatus
 from .configuration import PutsyncConfig
 from .models.file import File
-from .models.syncattempt import SyncAttempt
 
 logger = logging.getLogger(__name__)
 
 
 class SyncEngine(object):
     def syncnextpendingfile(self):
-        with db_session:
-            file = filecollection.nextpending()
-            if file is None:
-                logger.warn('Nothing found to sync')
-                return None
+        try:
+            with db_session(serializable=True):
+                file = File.get(status=FileStatus.new)
 
-            attempt = SyncAttempt(file=file)
-            commit()
+                if file is None:
+                    logger.warn('No file found to sync')
+                    return None
 
-            file_id = file.id
-            attempt_id = attempt.id
+                file.status = FileStatus.syncing
+                file.started_at = datetime.utcnow()
 
-            remote_file = File[file_id].remotefile()
-            full_filepath = os.path.join(
-                PutsyncConfig().media_path,
-                File[file_id].filepath
-            )
+                id_ = file.id
+                remote_file = file.remotefile()
+                filepath = file.filepath
+        except Exception as e:
+            import ipdb; ipdb.set_trace()
+            logger.exception('Some uncaught exception in above')
+
+        full_filepath = os.path.join(
+            PutsyncConfig().media_path,
+            filepath
+        )
 
         try:
             self._attempt(remote_file, full_filepath)
-
-            # if no uncaught exceptions, we are successful
-            with db_session:
-                SyncAttempt[attempt_id].successful()
+            failed = False
         except Exception as e:
             logger.exception('Uncaught exception when processing the download')
+            failed = True
 
-            with db_session:
-                SyncAttempt[attempt_id].failed(str(e))
-
-        return file_id, attempt_id
+        with db_session:
+            if failed:
+                File[id_].fail()
+            else:
+                File[id_].done()
 
     def _attempt(self, remote_file, full_filepath):
         parent_folderpath = os.path.dirname(full_filepath)

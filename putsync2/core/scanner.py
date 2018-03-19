@@ -6,7 +6,7 @@ import time
 import putiopy
 from pony.orm import db_session, select
 
-from . import filecollection
+from .models.file import FileCollection
 from .configuration import PutsyncConfig
 
 logger = logging.getLogger(__name__)
@@ -90,7 +90,7 @@ class Scanner(object):
                 remote_file.name
             )
 
-            filecollection.add(
+            FileCollection().add(
                 remote_file=remote_file,
                 filepath=filepath
             )

@@ -1,26 +1,16 @@
 from enum import Enum
 
 
-class PutsyncExceptionType(Enum):
-    scan = 0
-    download = 1
-    configuration = 3
-    filesystem = 4
-    unknown = 99999
-
-
 class PutsyncException(Exception):
-    def __init__(self, type, description=''):
-        self.type = type
-        self.description = description
+    def __init__(self, message):
+        self.message = message
 
-        self.message = self.__get_message()
 
-    def __get_message(self):
-        return {
-            PutsyncExceptionType.scan: 'Scanning error',
-            PutsyncExceptionType.download: 'Download error',
-            PutsyncExceptionType.configuration: 'Configuration error',
-            PutsyncExceptionType.filesystem: 'Filesystem error',
-            PutsyncExceptionType.unknown: 'Unknown error'
-        }[self.type]
+class ScanPutsyncException(Exception):
+    def __init__(self, file_id):
+        self.message = f'Error scanning putsync item {file_id}'
+
+
+class DownloadPutsyncException(Exception):
+    def __init__(self, putsync_id, filepath):
+        self.message = f'Error downloading file {putsync_id} to destination {filepath}'

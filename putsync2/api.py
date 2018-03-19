@@ -1,13 +1,10 @@
 import logging
 import flask
-import sys
 
-from pony.orm import db_session, select, count, sum, desc, max
 import putiopy
 
-from .core import filecollection
+from .core.models.file import FileCollection
 from .core.models.file import File
-from .core.models.syncattempt import SyncAttempt
 from .core.scanner import Scanner
 from .core.configuration import PutsyncConfig
 
@@ -44,13 +41,12 @@ def full():
 
 
 @api.route('/downloads')
-@db_session
 def downloads():
     status = flask.request.args.get('status', 'done')
     page = flask.request.args.get('page', 0, type=int)
     page_size = flask.request.args.get('page-size', 25, type=int)
 
-    files, file_count = filecollection.synchistory(status, page+1, page_size)
+    files, file_count = FileCollection().query(status, page+1, page_size)
     out = {
         'count': file_count,
         'data': [f.to_dict() for f in files]
@@ -60,7 +56,6 @@ def downloads():
 
 
 @api.route('/downloads/retry/<int:id>', methods=['POST'])
-@db_session
 def retrydownload(id):
     file = File[id].markforretry()
 
@@ -81,13 +76,13 @@ def add():
 
 @api.route('/statistics')
 def statistics():
-    total_bytes = filecollection.bytesndays(100000)
-    last_day_bytes = filecollection.bytesndays(1)
-    last_month_bytes = filecollection.bytesndays(30)
+    total_bytes = FileCollection().bytesndays(100000)
+    last_day_bytes = FileCollection().bytesndays(1)
+    last_month_bytes = FileCollection().bytesndays(30)
 
-    total_count = filecollection.countndays(100000)
-    last_day_count = filecollection.countndays(1)
-    last_month_count = filecollection.countndays(30)
+    total_count = FileCollection().countndays(100000)
+    last_day_count = FileCollection().countndays(1)
+    last_month_count = FileCollection().countndays(30)
 
     # get last download time
     last_download_time = None
