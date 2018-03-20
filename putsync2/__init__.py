@@ -4,7 +4,7 @@ import os
 
 from .core import db
 from .core.offline import ConfiguredSchedulePool
-from .core.configuration import Config
+from .core.configuration import set_config_filepath
 from .webapp import app
 
 logger = logging.getLogger(__name__)
@@ -16,7 +16,7 @@ loggerformat =\
 logging.basicConfig(format=loggerformat, level=logging.INFO)
 logger.warn(f'Log level set to INFO')
 logger.warn(f'Using config file {config_path}')
-Config.setconfigfilepath(config_path)
+set_config_filepath(config_path)
 db.init()
 
 webapp = app

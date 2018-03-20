@@ -10,6 +10,7 @@
                     <el-menu-item index="/history">History</el-menu-item>
                     <el-menu-item index="/add">Add Magnet Link</el-menu-item>
                     <el-menu-item index="/statistics">Statistics</el-menu-item>
+                    <el-menu-item index="/configuration">Configuration</el-menu-item>
                 </el-menu>
             </el-col>
         </el-row>

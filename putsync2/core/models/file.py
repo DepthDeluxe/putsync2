@@ -7,7 +7,7 @@ from sqlalchemy import Column, Integer, String, DateTime, Enum, func
 
 
 from ..db import Base
-from ..configuration import PutsyncConfig
+from ..configuration import config_instance
 
 logger = logging.getLogger(__name__)
 
@@ -56,7 +56,7 @@ class File(Base):
             logger.info('File verification called, running stub instead')
             return True
 
-        remote_file = PutsyncConfig().getclient().File.get(
+        remote_file = config_instance().getclient().File.get(
             self.putsync_id
         )
         remote_file._verify_file = _new_verify_file
@@ -94,20 +94,15 @@ class FileCollection(object):
         return self._session.query(File).get(id_)
 
     def query(self, status=FileStatus.done, page=1, page_size=10):
-        results = self._session.query(File, func.count(File.id))\
+        if isinstance(status, str):
+            status = FileStatus(status)
+
+        query = self._session.query(File)\
             .filter_by(status=status)\
-            .offset(page*page_size)\
-            .limit(page_size)\
-            .all()
+            .offset(page * page_size)\
+            .limit(page_size)
 
-        try:
-            records = [x[0] for x in results]
-            count = results[0][1]
-        except IndexError:
-            records = []
-            count = 0
-
-        return records, count
+        return query.all(), query.count()
 
     def inprogress(self, page=1, page_size=10):
         return self.query(
@@ -116,10 +111,22 @@ class FileCollection(object):
             page_size=page_size
         )
 
-    def countndays(n):
-        logger.error('Not implemented')
-        return 0
+    def countndays(self, n):
+        result = self._session.query(func.count(File.id))\
+            .filter(
+                File.status == FileStatus.done and
+                File.done_at > (datetime.utcnow() - timedelta(days=n))
+            ).first()[0]
 
-    def bytesndays(n):
-        logger.error('Not implemented')
-        return 0
+        logger.info(f'Downloaded {result} files in past {n} days')
+        return result
+
+    def bytesndays(self, n):
+        result = self._session.query(func.sum(File.size))\
+            .filter(
+                File.status == FileStatus.done and
+                File.done_at > (datetime.utcnow() - timedelta(days=n))
+            ).first()[0]
+
+        logger.info(f'Downloaded {result} bytes in past {n} days')
+        return result

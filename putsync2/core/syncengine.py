@@ -6,7 +6,7 @@ from sqlalchemy.orm.session import make_transient
 
 from .db import SessionContext, Session
 from .models.file import FileCollection, File, FileStatus
-from .configuration import PutsyncConfig
+from .configuration import config_instance
 from .models.file import File
 
 logger = logging.getLogger(__name__)
@@ -49,7 +49,7 @@ class SyncEngine(object):
 
     def _attempt(self, file):
         full_filepath = os.path.join(
-            PutsyncConfig().media_path,
+            config_instance().media_path,
             file.filepath
         )
 
@@ -70,7 +70,7 @@ class SyncEngine(object):
         except FileExistsError:
             logger.info(f'Folder {parent_folderpath} already exists')
 
-        if PutsyncConfig().disable_downloading:
+        if config_instance().disable_downloading:
             logger.warn(f'Configured to disable real downloading')
         else:
             file.remote_file().download(dest=parent_folderpath)

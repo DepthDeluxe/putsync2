@@ -1,10 +1,11 @@
 import Vue from 'vue'
 import Router from 'vue-router'
 
-import Downloads from './components/Downloads.vue'
-import History from './components/History.vue'
-import Statistics from './components/Statistics.vue'
-import AddMagnetLink from './components/AddMagnetLink.vue'
+import Downloads from './pages/Downloads.vue'
+import History from './pages/History.vue'
+import Statistics from './pages/Statistics.vue'
+import AddMagnetLink from './pages/AddMagnetLink.vue'
+import Configuration from './pages/Configuration.vue'
 
 Vue.use(Router)
 
@@ -29,6 +30,11 @@ export default new Router({
             path: '/statistics',
             name: 'Statistics',
             component: Statistics
+        },
+        {
+            path: '/configuration',
+            name: 'Configuration',
+            component: Configuration
         }
     ]
 })

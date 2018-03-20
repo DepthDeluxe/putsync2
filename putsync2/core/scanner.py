@@ -7,14 +7,14 @@ import putiopy
 
 from .db import SessionContext
 from .models.file import FileCollection
-from .configuration import PutsyncConfig
+from .configuration import config_instance
 
 logger = logging.getLogger(__name__)
 
 
 class Scanner(object):
     def __init__(self):
-        self._client = PutsyncConfig().getclient()
+        self._client = config_instance().getclient()
         self._current_traversed_path = ['']
 
     def scan(self, root_id=0):
