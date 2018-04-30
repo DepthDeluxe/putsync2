@@ -1,3 +1,4 @@
+import os
 from datetime import datetime, timedelta
 import logging
 import enum
@@ -31,7 +32,7 @@ class File(Base):
     attempt_count = Column(Integer, default=0)
 
     def move(self, new_filepath):
-        pass
+        raise NotImplementedError()
 
     def start(self):
         self.status = FileStatus.in_progress
@@ -48,7 +49,7 @@ class File(Base):
         self.done_at = datetime.utcnow()
 
     @functools.lru_cache(maxsize=32)
-    def remotefile(self):
+    def remote_file(self):
         # we want to disable file verification becuase it takes a very long
         # time to run on a Raspberry Pi.  We want to maximize the download
         # rate.
@@ -130,3 +131,18 @@ class FileCollection(object):
 
         logger.info(f'Downloaded {result} bytes in past {n} days')
         return result
+
+    def delete_pending(self):
+        logger.warn('Deleting pending files from system')
+        files = self._session.query(File)\
+            .filter_by(status=FileStatus.in_progress)\
+            .all()
+
+        logger.info(f'{len(files)} pending items will be items deleted')
+        for file in files:
+            try:
+                os.remove(file.filepath)
+            except FileNotFoundError:
+                pass
+
+            self._session.delete(file)

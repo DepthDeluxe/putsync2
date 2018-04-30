@@ -14,3 +14,8 @@ class ScanPutsyncException(Exception):
 class DownloadPutsyncException(Exception):
     def __init__(self, putsync_id, filepath):
         self.message = f'Error downloading file {putsync_id} to destination {filepath}'
+
+
+class RemoteFileMissingException(Exception):
+    def __init__(self, name, remote_id):
+        self.message = f'File {remote_id}, name {name} is missing from the remote server'

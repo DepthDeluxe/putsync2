@@ -11,7 +11,7 @@
                 border>
                 <el-table-column prop="filepath" width="450" label="Name"></el-table-column>
                 <el-table-column prop="done_at" width="300" label="Complete At"></el-table-column>
-                <el-table-column prop="size" label="Size"></el-table-column>
+                <el-table-column prop="size" label="Size MB"></el-table-column>
             </el-table>
             <div style="text-align:center; padding:10px">
                 <!-- TODO(colin) pagination is somehow broken -->
@@ -30,6 +30,8 @@
 </template>
 
 <script>
+import moment from 'moment'
+
 export default {
     data () {
         return {
@@ -58,7 +60,15 @@ export default {
             return this.$http.get('/api/downloads?' + query_string).then(response => {
                 console.log(response)
                 this.download_count = response.body.count
-                this.table_data = response.body.data
+
+                this.table_data = []
+                response.body.data.forEach(item => {
+                    this.table_data.push({
+                        filepath: item.filepath,
+                        done_at: moment.utc(item.done_at).format('lll'),
+                        size: (item.size / (1000*1000)).toFixed(2)
+                    })
+                })
             });
         }
     },

@@ -54,7 +54,6 @@ def serialize_obj(obj):
     return d
 
 
-
 def init():
     # properly format the relative pathing for db file.  If this isn't done,
     # pony will choose the location of script file as the current directory

@@ -72,7 +72,7 @@ setup(
     # install_requires=['peppercorn'],
     install_requires=[
         'pony',
-        'putio.py',
+        'putio.py==8.1.0',
         'Flask',
         'schedule',
         'retrying',

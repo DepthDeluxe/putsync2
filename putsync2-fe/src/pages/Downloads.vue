@@ -3,44 +3,36 @@
         <h1>Active Downloads</h1>
         <el-button v-loading="is_scanning" v-on:click="triggerscan">Scan Now</el-button>
 
-        <p>Items actively downloading</p>
-        <el-table
-            v-loading="table_loading"
-            :data="table_data"
-            style="width: 100%"
-            height=500
-            stripe
-            border>
-            <el-table-column prop="filepath" label="Name"></el-table-column>
-            <el-table-column prop="started_at" label="Started At"></el-table-column>
-            <el-table-column prop="running_for" label="Running For"></el-table-column>
-        </el-table>
-
+        <p>Active Items</p>
+        <download-table
+            :filter="active_filter"
+            />
+        
+        <p>Pending Items</p>
+        <download-table
+            :filter="new_filter"
+            />
     </div>
 </template>
 
 <script>
+import moment from 'moment'
+
 export default {
     data() {
         return {
-            table_loading: false,
-            table_update_interval_id: null,
-            table_data: [],
+            active_filter: {
+                status: 'in_progress'
+            },
+            new_filter: {
+                status: 'new'
+            },
             is_scanning: false
         }
     },
     computed: {
     },
     methods: {
-        gettabledata() {
-            this.table_loading = true
-
-            return this.$http.get('/api/downloads?status=in_progress').then(response => {
-                this.table_data = response.body.data
-            }).then(() => {
-                this.table_loading = false
-            })
-        },
         triggerscan() {
             if (this.is_scanning) {
                 return
@@ -64,14 +56,6 @@ export default {
                 })
             })
         }
-    },
-    mounted() {
-        this.gettabledata()
-
-        this.table_update_interval_id = setInterval(this.gettabledata, 2500)
-    },
-    beforeDestroy() {
-        clearInterval(this.table_update_interval_id)
     }
 }
 </script>

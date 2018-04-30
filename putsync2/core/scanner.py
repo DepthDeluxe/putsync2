@@ -1,9 +1,5 @@
 import os
 import logging
-from threading import Thread
-import time
-
-import putiopy
 
 from .db import SessionContext
 from .models.file import FileCollection

@@ -3,6 +3,7 @@ import time
 import os
 
 from .core import db
+from .core.models.file import FileCollection
 from .core.offline import ConfiguredSchedulePool
 from .core.configuration import set_config_filepath
 from .webapp import app

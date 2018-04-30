@@ -1,32 +1,24 @@
 import logging
 import os
-from datetime import datetime
 
 from sqlalchemy.orm.session import make_transient
+from putiopy import ClientError
 
-from .db import SessionContext, Session
-from .models.file import FileCollection, File, FileStatus
+from .db import SessionContext
+from .models.file import File, FileStatus
 from .configuration import config_instance
-from .models.file import File
+from ..util.synchronization import locked
 
 logger = logging.getLogger(__name__)
 
 
 class SyncEngine(object):
     def syncnextpendingfile(self):
-        with SessionContext() as session:
-            file = session.query(File)\
-                .filter_by(status=FileStatus.new)\
-                .first()
+        id_ = fetch_next_pending_file_id()
 
-            if file is None:
-                logger.warn('No file found to sync')
-                return None
-
-            logger.info(f'Processing file {file.id}')
-            file.start()
-
-            id_ = file.id
+        if id_ is None:
+            logger.warn('No file found to sync')
+            return None
 
         # get transient copy from DB, need transient so the long-running
         # download doesn't eat a session
@@ -38,7 +30,8 @@ class SyncEngine(object):
             self._attempt(file)
             file.done()
         except Exception as e:
-            logger.exception('Exception {e} fired when processing file {file.filepath}')
+            logger.exception(f'Exception {e} fired when processing file '
+                             f'{file.filepath}')
             file.fail()
 
         # remerge detached object back with session
@@ -73,7 +66,31 @@ class SyncEngine(object):
         if config_instance().disable_downloading:
             logger.warn(f'Configured to disable real downloading')
         else:
-            file.remote_file().download(dest=parent_folderpath)
+            try:
+                file.remote_file().download(dest=parent_folderpath)
+            except ClientError as e:
+                if e.type == 'NotFound':
+                    logger.error('File not found, will mark as done')
+                else:
+                    raise e
+
+
+@locked
+def fetch_next_pending_file_id():
+    with SessionContext() as session:
+        file = session.query(File)\
+            .filter_by(status=FileStatus.new)\
+            .first()
+
+        if file is None:
+            return None
+
+        logger.info(f'Processing file {file.id}')
+        file.start()
+
+        id_ = file.id
+
+    return id_
 
 
 if __name__ == '__main__':
