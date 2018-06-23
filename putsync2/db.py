@@ -8,8 +8,6 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.state import InstanceState
 from sqlalchemy.ext.declarative import declarative_base
 
-from .configuration import config_instance
-
 logger = logging.getLogger(__name__)
 
 
@@ -54,11 +52,7 @@ def serialize_obj(obj):
     return d
 
 
-def init():
-    # properly format the relative pathing for db file.  If this isn't done,
-    # pony will choose the location of script file as the current directory
-    # for some unknown reason
-    database_path = config_instance().database_path
+def setup_database(database_path):
     if database_path[0] != '/':
         database_path = (os.getcwd() + '/' + database_path).replace('/./', '/')
 

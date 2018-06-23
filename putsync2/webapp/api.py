@@ -1,36 +1,45 @@
 import logging
-import flask
+from flask import Blueprint, request, jsonify, json
+from flask import current_app as app
 
-import putiopy
+from ..db import serialize_obj, SessionContext
+from ..core.file import FileStatus, FileCollection
+from ..core.scanner import Scanner
+from ..core.putio import create_client
+from ..core.task import Task
 
-from .core.db import serialize_obj
-from .core.db import SessionContext
-from .core.models.file import File, FileStatus, FileCollection
-from .core.scanner import Scanner
-from .core.configuration import config_instance
-
-api = flask.Blueprint(__name__, __name__, url_prefix='/api')
+api = Blueprint(__name__, __name__, url_prefix='/api')
 logger = logging.getLogger(__name__)
+
+
+def get_config():
+    return app.config['PUTSYNC_CONFIGURATION_MANAGER'].get().backend
 
 
 @api.route('/trigger', methods=['POST'])
 def trigger():
-    logger.info('POST data: %s', flask.request.form)
-    Scanner().scan(int(flask.request.form.get('file_id', 0)))
+    logger.info('POST data: %s', request.form)
+    file_id = int(request.form.get('file_id', 0))
+    putio_token = get_config().putio_token
+
+    with Scanner(putio_token, f'triggered-{file_id}') as scanner:
+        scanner.scan(file_id)
 
     response = {
         'route': '/trigger',
         'folder': {
-            'id': flask.request.form.get('file_id', None),
+            'id': request.form.get('file_id', None),
         }
     }
-    return flask.jsonify(response), 200
+    return jsonify(response), 200
 
 
 @api.route('/full', methods=['POST'])
 def full():
-    logger.info(f'POST data: {flask.request.form}')
-    Scanner().scan()
+    logger.info(f'POST data: {request.form}')
+
+    with Scanner('triggered-full') as scanner:
+        scanner.scan()
 
     response = {
         'route': '/full',
@@ -38,14 +47,14 @@ def full():
             'id': 0,
         }
     }
-    return flask.jsonify(response), 200
+    return jsonify(response), 200
 
 
 @api.route('/downloads')
 def downloads():
-    status = FileStatus(flask.request.args.get('status', 'done', type=str))
-    page = flask.request.args.get('page', 1, type=int)
-    page_size = flask.request.args.get('page-size', 25, type=int)
+    status = FileStatus(request.args.get('status', 'done', type=str))
+    page = request.args.get('page', 1, type=int)
+    page_size = request.args.get('page-size', 25, type=int)
 
     with SessionContext() as session:
         files, file_count = FileCollection(session).query(
@@ -59,23 +68,14 @@ def downloads():
             'data': [serialize_obj(f) for f in files]
         }
 
-        return flask.json.dumps(out)
-
-
-@api.route('/downloads/retry/<int:id>', methods=['POST'])
-def retrydownload(id):
-    file = File[id].markforretry()
-
-    return flask.jsonify({
-        'data': serialize_obj(file)
-    })
+        return json.dumps(out)
 
 
 @api.route('/add', methods=['POST'])
 def add():
-    magnet_link = flask.request.json['magnet_link']
+    magnet_link = request.json['magnet_link']
 
-    client = putiopy.Client(config_instance().putio_token)
+    client = create_client(get_config().putio_token)
     client.Transfer.add_url(magnet_link)
 
     return 'Accepted', 202
@@ -97,7 +97,7 @@ def statistics():
     # get last download time
     last_download_time = None
 
-    return flask.jsonify({
+    return jsonify({
         'data': {
             'bytes': {
                 'total': total_bytes,
@@ -112,3 +112,11 @@ def statistics():
             'last_time': last_download_time,
             }
         })
+
+
+@api.route('/tasks')
+def tasks():
+    return jsonify([
+        t.to_dict()
+        for t in Task.instances()
+    ])

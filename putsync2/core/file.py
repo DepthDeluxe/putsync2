@@ -2,13 +2,11 @@ import os
 from datetime import datetime, timedelta
 import logging
 import enum
-import functools
 
 from sqlalchemy import Column, Integer, String, DateTime, Enum, func
 
 
 from ..db import Base
-from ..configuration import config_instance
 
 logger = logging.getLogger(__name__)
 
@@ -47,22 +45,6 @@ class File(Base):
     def fail(self):
         self.status = FileStatus.new
         self.done_at = datetime.utcnow()
-
-    @functools.lru_cache(maxsize=32)
-    def remote_file(self):
-        # we want to disable file verification becuase it takes a very long
-        # time to run on a Raspberry Pi.  We want to maximize the download
-        # rate.
-        def _new_verify_file(*args, **kwargs):
-            logger.info('File verification called, running stub instead')
-            return True
-
-        remote_file = config_instance().getclient().File.get(
-            self.putsync_id
-        )
-        remote_file._verify_file = _new_verify_file
-
-        return remote_file
 
 
 class FileCollection(object):

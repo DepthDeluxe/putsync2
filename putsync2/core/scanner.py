@@ -1,21 +1,38 @@
 import os
 import logging
 
-from .db import SessionContext
-from .models.file import FileCollection
-from .configuration import config_instance
+from ..db import SessionContext
+from .file import FileCollection
+from .task import Task
+from .putio import PutioClient
 
 logger = logging.getLogger(__name__)
 
 
 class Scanner(object):
-    def __init__(self):
-        self._client = config_instance().getclient()
+    def __init__(self, putio_token, name='scanner'):
+        self._putio_client = PutioClient(putio_token)
         self._current_traversed_path = ['']
 
+        self._task = Task(name)
+
     def scan(self, root_id=0):
+        self._task.running()
+
         try:
-            root_item = self._client.File.get(root_id)
+            self._scan(root_id)
+        finally:
+            self._task.idle()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args, **kwargs):
+        self._task.close()
+
+    def _scan(self, root_id):
+        try:
+            root_item = self._putio_client.fetch_remote_file(root_id)
         except Exception:
             logger.exception('Unable to get root file path, stopping scan')
             return
@@ -37,11 +54,13 @@ class Scanner(object):
 
         # keep looping while id is not zero, this will skip top folder
         # so it is not included in the name convention
-        remote_item = self._client.File.get(remote_item.parent_id)
+        remote_item = self._putio_client.fetch_remote_file(
+            remote_item.parent_id)
         while remote_item.id != 0:
             logger.debug(f'Current path list: {out}')
             out.insert(0, remote_item.name)
-            remote_item = self._client.File.get(remote_item.parent_id)
+            remote_item = self._putio_client.fetch_remote_file(
+                remote_item.parent_id)
 
         logger.debug(f'Final full path: {out}')
         return out

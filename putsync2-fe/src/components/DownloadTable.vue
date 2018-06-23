@@ -33,7 +33,7 @@ export default {
         fetch_data() {
             this.loading = true
 
-            this.$http.get('/api/downloads', {props: this.filter}).then(response => {
+            this.$http.get('/api/downloads', {params: this.filter}).then(response => {
                 this.data = []
                 response.body.data.forEach(item => {
                     this.data.push({
